@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Veridian Flip Reader</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pageguide/1.3.1/pageguide.min.js"></script>
+    <style>
+        body { margin: 0; background-color: #0f172a; overflow: hidden; }
+        #book { width: 100vw; height: 100vh; background: #f3e5ab; }
+        .page { 
+            width: 100%; height: 100%; 
+            padding: 40px; box-sizing: border-box;
+            background: #fdf6e3; 
+            box-shadow: inset 5px 0 10px rgba(0,0,0,0.1);
+            font-family: 'Georgia', serif; font-size: 18px; line-height: 1.6;
+        }
+        .page-number { position: absolute; bottom: 20px; width: 100%; text-align: center; color: #999; }
+    </style>
+</head>
+<body>
+
+<div id="book">
+    <div class="page">
+        <h2 style="color:#007066">Chapter 1</h2>
+        <p>The dawn broke over the Veridian Studios, casting long shadows across the library floor. Every book held a secret, but this one... this one was different.</p>
+        <div class="page-number">- 1 -</div>
+    </div>
+    <div class="page">
+        <p>As the reader turned the first page, the air grew cold. The words on the parchment began to glow with a faint, veridian light.</p>
+        <div class="page-number">- 2 -</div>
+    </div>
+</div>
+
+<script>
+    // This script handles the "Touch and Drag" logic for the page flip
+    let startX = 0;
+    document.addEventListener('touchstart', e => startX = e.touches[0].clientX);
+    document.addEventListener('touchend', e => {
+        let endX = e.changedTouches[0].clientX;
+        if (startX - endX > 50) console.log("Next Page Flip Animation Triggered");
+        if (endX - startX > 50) console.log("Back Page Flip Animation Triggered");
+    });
+</script>
+
+</body>
+</html>
