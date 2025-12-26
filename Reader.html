@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reading Room | Veridian Library</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f3e5ab; color: #0f172a; font-family: serif; }
+        .page-shadow { box-shadow: 5px 5px 15px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4">
+    <nav class="w-full max-w-4xl flex justify-between items-center py-4 border-b border-[#007066]/20 mb-8">
+        <button onclick="location.href='index.html'" class="text-[#007066] font-bold">← Back to Lobby</button>
+        <h1 class="text-xl font-bold italic">Veridian Origins</h1>
+        <div class="w-10"></div> </nav>
+
+    <main class="w-full max-w-2xl bg-white p-8 rounded shadow-lg min-h-[60vh] flex flex-col justify-between page-shadow">
+        <div id="content" class="prose lg:prose-xl leading-relaxed text-lg text-justify">
+            <h2 class="text-center text-2xl mb-6">Chapter One</h2>
+            <p>Your story begins here. This is the immersive room you planned on your whiteboard. Soon, we will connect your PDF or EPUB files to this space.</p>
+        </div>
+
+        <div class="mt-8 flex justify-between border-t pt-4 border-gray-100">
+            <button class="px-4 py-2 bg-gray-100 rounded">Previous</button>
+            <span class="text-gray-400 italic">Page 1 of 1</span>
+            <button class="px-4 py-2 bg-[#007066] text-white rounded">Next</button>
+        </div>
+    </main>
+
+    <footer class="mt-12 text-sm text-gray-500 italic">
+        "Read with intention." — Veridian Studios
+    </footer>
+</body>
+</html>
