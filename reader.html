@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Veridian 3D Reader</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/turn.js/3/turn.min.js"></script>
+    <style>
+        body { margin: 0; background-color: #1a1a1a; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        #flipbook { width: 90vw; height: 85vh; }
+        .page { background-color: #fdf6e3; padding: 40px; box-sizing: border-box; font-family: 'Georgia', serif; font-size: 1.2rem; line-height: 1.6; border-left: 1px solid #ddd; }
+        .cover { background-color: #007066 !important; color: white; display: flex; align-items: center; justify-content: center; border: none !important; }
+        .page-num { position: absolute; bottom: 20px; width: 100%; text-align: center; font-size: 0.8rem; color: #999; left: 0; }
+    </style>
+</head>
+<body>
+
+    <div id="flipbook">
+        <div class="page cover"><h1>Veridian Origins</h1></div>
+        
+        <div class="page"><h3>The Prologue</h3><p>This is the back of the cover. Now you have enough thickness to flip.</p></div>
+        
+        <div class="page">
+            <h2>Chapter One</h2>
+            <p>The dawn broke over the archives... (Page 3)</p>
+            <div class="page-num">3</div>
+        </div>
+        
+        <div class="page">
+            <p>You are now experiencing the 3D physics of the Veridian Library. (Page 4)</p>
+            <div class="page-num">4</div>
+        </div>
+    </div>
+
+    <script>
+        $(window).ready(function() {
+            $('#flipbook').turn({
+                acceleration: true,
+                gradients: true,
+                elevation: 50,
+                when: {
+                    turning: function(e, page, view) {
+                        console.log('Turning to page: ' + page);
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
