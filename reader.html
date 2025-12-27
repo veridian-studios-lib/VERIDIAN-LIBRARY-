@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Veridian | The Luxury Experience</title>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/turn.js/3/turn.min.js"></script>
+    
+    <style>
+        /* LUXURY SYSTEM RESET */
+        * { -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-drag: none; outline: none; }
+        
+        body { 
+            margin: 0; padding: 0; background: #000; 
+            overflow: hidden; height: 100vh; width: 100vw;
+            display: flex; justify-content: center; align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        /* THE GALLERY ENVIRONMENT */
+        #viewport {
+            width: 100vw; height: 100vh;
+            perspective: 4000px; /* Ultra-deep field */
+            background: radial-gradient(circle at 50% 50%, #1a1a1a 0%, #000 100%);
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* THE BOOK CHASSIS */
+        #flipbook {
+            box-shadow: 0 50px 100px rgba(0,0,0,0.9);
+            transition: opacity 0.8s ease-in-out;
+        }
+
+        /* ORGANIC PAPER PHYSICS */
+        .page { 
+            background-color: #fcfaf2;
+            background-image: 
+                linear-gradient(to right, rgba(0,0,0,0.05) 0%, transparent 5%, transparent 95%, rgba(0,0,0,0.05) 100%),
+                url('https://www.transparenttextures.com/patterns/handmade-paper.png');
+            padding: 10% 8%; 
+            box-sizing: border-box;
+            font-family: "Georgia", serif; 
+            font-size: 1.2rem; 
+            line-height: 1.8; 
+            color: #1a1a1a;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.02);
+            overflow: hidden;
+        }
+
+        /* THE SPINE (The 'Binder' Area) */
+        .page::before {
+            content: ""; position: absolute; top: 0; bottom: 0; width: 30px;
+            z-index: 10; pointer-events: none;
+        }
+        .odd::before { left: 0; background: linear-gradient(to right, rgba(0,0,0,0.15), transparent); }
+        .even::before { right: 0; background: linear-gradient(to left, rgba(0,0,0,0.15), transparent); }
+
+        /* THE CENTER GUTTER SHADOW */
+        .page::after {
+            content: ""; position: absolute; top: 0; bottom: 0; width: 1px;
+            background: rgba(0,0,0,0.1); z-index: 11;
+        }
+        .odd::after { left: 0; }
+        .even::after { right: 0; }
+
+        /* PREMIUM LEATHER EXTERIOR */
+        .cover { 
+            background: linear-gradient(135deg, #004d46 0%, #002b26 100%) !important;
+            background-image: url('https://www.transparenttextures.com/patterns/dark-leather.png') !important;
+            color: #d4af37 !important;
+            display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; 
+            text-align: center; border: none !important;
+        }
+
+        .cover h1 { 
+            font-size: 3rem; font-weight: 300; letter-spacing: -1px; 
+            text-shadow: 0 10px 20px rgba(0,0,0,0.4); 
+            margin: 20px 0;
+        }
+
+        /* LUXURY NAVIGATION */
+        .ui-nav { position: absolute; top: 40px; left: 40px; z-index: 10000; }
+        .btn-exit {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(212, 175, 55, 0.3);
+            color: #d4af37; padding: 12px 24px; border-radius: 1px;
+            font-size: 9px; letter-spacing: 4px; text-transform: uppercase;
+            backdrop-filter: blur(15px); transition: 0.4s;
+        }
+
+        /* SMOOTHING TRANSITION OVERRIDE */
+        .turn-page {
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            transition: transform 1.6s cubic-bezier(0.15, 0, 0.15, 1) !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ui-nav">
+        <button class="btn-exit" onclick="location.href='index.html'">✕ Close Archive</button>
+    </div>
+
+    <div id="viewport">
+        <div id="flipbook">
+            <div class="page cover">
+                <p style="letter-spacing: 8px; font-size: 0.6rem; opacity: 0.6;">THE VERIDIAN COLLECTION</p>
+                <h1>ORIGINS</h1>
+                <div style="height: 1px; width: 40px; background: #d4af37; margin: 30px 0;"></div>
+                <p style="font-style: italic; font-size: 0.8rem;">Tap or Swipe to Open</p>
+            </div>
+
+            <div class="page" style="background:#f5f5f5;"></div>
+
+            <div class="page">
+                <h2 style="font-weight: 300; font-size: 2rem; color: #007066;">Prologue</h2>
+                <p>In the silence of the Great Library, the pages did not merely move; they breathed. Every curve of the paper was a symphony of light and shadow.</p>
+                <p>We designed the Veridian Engine to feel like a high-end physical object—something you would find in an Apple showroom.</p>
+            </div>
+
+            <div class="page">
+                <p>Experience the <b>Landscape Double-Spread</b>. By rotating your device, you activate the full binder physics.</p>
+                <p>The back-flip is now anchored by a center spine, eliminating the jitter and flicker of standard web readers.</p>
+            </div>
+
+            <div class="page">
+                <p>The textures of the paper are organic, reacting to the light as you turn. This is the luxury of detail.</p>
+            </div>
+
+            <div class="page" style="background:#f5f5f5;"></div>
+        </div>
+    </div>
+
+<script>
+    /**
+     * VERIDIAN ELYSIUM ENGINE v3.0
+     * Built for high-end mobile performance and organic physics
+     */
+    $(window).ready(function() {
+        var $book = $('#flipbook');
+        
+        function setup() {
+            var w = $(window).width();
+            var h = $(window).height();
+            var isLandscape = w > h;
+
+            // Initialize the Turn.js engine with Cinematic Parameters
+            $book.turn({
+                width: isLandscape ? w * 0.95 : w,
+                height: isLandscape ? h * 0.9 : h,
+                display: isLandscape ? 'double' : 'single',
+                acceleration: true,
+                gradients: true,
+                elevation: 600, // Maximum lift for dramatic 3D curl
+                duration: 1800, // Weighted cinematic speed
+                autoCenter: true,
+                when: {
+                    turning: function(e, page, view) {
+                        // Dynamic Physics logic
+                    }
+                }
+            });
+        }
+
+        setup();
+
+        // GESTURE PHYSICS ENGINE
+        var startX, startY, startTime;
+        document.addEventListener('touchstart', function(e) {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            startTime = new Date().getTime();
+        }, {passive: true});
+
+        document.addEventListener('touchend', function(e) {
+            var endX = e.changedTouches[0].clientX;
+            var endY = e.changedTouches[0].clientY;
+            var duration = new Date().getTime() - startTime;
+            
+            var diffX = startX - endX;
+            var diffY = Math.abs(startY - endY);
+
+            // Velocity-based flip (even short swipes trigger if fast)
+            if (diffY < 100) {
+                if (diffX > 50 || (diffX > 20 && duration < 200)) {
+                    $book.turn('next');
+                } else if (diffX < -50 || (diffX < -20 && duration < 200)) {
+                    $book.turn('previous');
+                }
+            }
+        }, {passive: true});
+
+        // ROTATION ADAPTIVITY
+        $(window).resize(function() {
+            location.reload(); // Ensures the 3D grid re-calculates for the new orientation
+        });
+
+        // Disable standard browser friction
+        document.body.addEventListener('touchmove', function(e) {
+            if(e.touches.length > 1) e.preventDefault();
+        }, {passive: false});
+    });
+</script>
+
+</body>
+</html>
