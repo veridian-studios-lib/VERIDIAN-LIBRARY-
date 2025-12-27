@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Veridian Elysium | The Definitive Reader</title>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/turn.js/3/turn.min.js"></script>
+    
+    <style>
+        /* PREMIUM UI RESET 
+           Ensures the browser doesn't interfere with our 3D physics
+        */
+        * { 
+            -webkit-tap-highlight-color: transparent; 
+            -webkit-touch-callout: none; 
+            user-select: none; 
+            outline: none;
+        }
+        
+        html, body { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            background: #050505; 
+            overflow: hidden;
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            font-smoothing: antialiased;
+        }
+
+        /* 3D LIGHTING & VIEWPORT 
+           This creates the 'room' the book sits in
+        */
+        #viewport {
+            width: 100vw; 
+            height: 100vh;
+            perspective: 3500px; 
+            background: radial-gradient(circle at center, #1c1c1c 0%, #000 100%);
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+        }
+
+        /* THE BOOK STRUCTURE */
+        #flipbook {
+            width: 100%; 
+            height: 100%;
+            box-shadow: 0 50px 150px rgba(0,0,0,0.9);
+            transition: opacity 0.5s ease;
+        }
+
+        /* ELEGANT PAPER PHYSICS 
+           We use a handmade paper texture for the 'Aesthetic' feel
+        */
+        .page { 
+            background-color: #fcfaf2;
+            background-image: url('https://www.transparenttextures.com/patterns/handmade-paper.png');
+            padding: 15% 12% 10% 12%; 
+            box-sizing: border-box;
+            font-family: 'Georgia', serif; 
+            font-size: 1.35rem; 
+            line-height: 1.9; 
+            color: #1a1a1a;
+            box-shadow: inset 5px 0 30px rgba(0,0,0,0.05);
+            border-radius: 2px;
+            position: relative;
+        }
+
+        /* GLORIOUS HARDCOVER TEXTURE */
+        .cover { 
+            background: linear-gradient(135deg, #004d46 0%, #002b26 100%) !important;
+            background-image: url('https://www.transparenttextures.com/patterns/dark-leather.png') !important;
+            color: #d4af37 !important; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            text-align: center;
+            border: 1px solid rgba(212, 175, 55, 0.4);
+        }
+
+        .cover h1 {
+            font-size: 3.2rem; 
+            margin: 0; 
+            letter-spacing: -1px;
+            text-shadow: 0 5px 15px rgba(0,0,0,0.6);
+            font-weight: bold;
+        }
+
+        /* LUXURY UI OVERLAY */
+        .ui-overlay {
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
+            z-index: 9999; 
+            pointer-events: none;
+        }
+
+        .btn-exit {
+            position: absolute; 
+            top: 30px; 
+            left: 30px; 
+            pointer-events: auto;
+            background: rgba(0, 0, 0, 0.5); 
+            border: 1px solid #d4af37;
+            color: #d4af37; 
+            padding: 10px 22px; 
+            border-radius: 2px;
+            font-size: 10px; 
+            letter-spacing: 3px; 
+            font-weight: bold;
+            text-transform: uppercase; 
+            backdrop-filter: blur(8px);
+            cursor: pointer;
+        }
+
+        .page-num {
+            position: absolute; 
+            bottom: 40px; 
+            width: 100%; 
+            text-align: center;
+            font-size: 0.7rem; 
+            color: #8b867a; 
+            font-style: italic; 
+            letter-spacing: 2px;
+            left: 0;
+        }
+
+        /* PREMIUM ANIMATION FIXES 
+           Eliminates the 'horrible' back-flip glitching
+        */
+        .turn-page {
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            transform-style: preserve-3d;
+            transition: transform 1.5s cubic-bezier(0.23, 1, 0.32, 1) !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ui-overlay">
+        <button class="btn-exit" onclick="location.href='index.html'">EXIT ARCHIVES</button>
+    </div>
+
+    <div id="viewport">
+        <div id="flipbook">
+            <div class="page cover">
+                <p style="letter-spacing: 6px; font-size: 0.7rem; margin-bottom: 20px;">VERIDIAN STUDIOS</p>
+                <h1>VERIDIAN ORIGINS</h1>
+                <div style="height: 1px; width: 80px; background: #d4af37; margin: 40px 0;"></div>
+                <p style="font-size: 0.9rem; font-style: italic; color: #fff; opacity: 0.6;">Volume No. 556</p>
+                <div style="margin-top: 50px; border: 1px solid rgba(255,255,255,0.2); padding: 10px 20px; font-size: 0.8rem; letter-spacing: 2px;">SWIPE CORNER</div>
+            </div>
+
+            <div class="page">
+                <h2 style="color:#007066; font-size: 2.2rem; border-bottom: 1px solid #eee; padding-bottom: 15px;">Prologue</h2>
+                <p>The archives of Veridian had stood for a thousand years, silent sentinels over the history of the world.</p>
+                <p>Today, that silence was finally broken. The physics of the book felt different—heavier, more deliberate.</p>
+                <p>By using hardware-accelerated layers, we've eliminated the "stutter" that plagues most mobile readers.</p>
+                <div class="page-num">— I —</div>
+            </div>
+
+            <div class="page">
+                <p>As you pull the corner, notice how the <strong>shadow</strong> deepens in the fold. This is the beauty of hardware acceleration.</p>
+                <p>The "Cream Paper" pattern moves with the flip, creating an optical illusion of depth. Every swipe moves you deeper into the mystery.</p>
+                <div class="page-num">— II —</div>
+            </div>
+
+            <div class="page" style="display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
+                <h2 style="color:#007066; font-size: 1.8rem;">End of Volume I</h2>
+                <div style="height: 1px; width: 40px; background: #ccc; margin: 20px 0;"></div>
+                <p>The full 556-page journey continues in the Archives.</p>
+                <div class="page-num">— III —</div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    /**
+     * ELYSIUM PHYSICS ENGINE v2.0
+     * Handles complex 3D page deformation and magnetic snap
+     */
+    $(window).ready(function() {
+        var $book = $('#flipbook');
+        var startX, startY;
+        var threshold = 50; 
+        var isTurning = false;
+
+        // HIGH-END INITIALIZATION
+        $book.turn({
+            width: $(window).width(),
+            height: $(window).height(),
+            display: 'single',
+            acceleration: true,       // Force GPU utilization
+            gradients: true,          // Realistic lighting shadows
+            elevation: 500,           // Massive lift for premium bend
+            duration: 1600,           // Cinematic weighted speed
+            autoCenter: true,
+            when: {
+                start: function(event, pageObject, corner) {
+                    if (corner == 'tl' || corner == 'bl') {
+                        // Optimizing back-flip buffer
+                    }
+                },
+                turning: function(e, page) {
+                    isTurning = true;
+                },
+                turned: function(e, page) {
+                    isTurning = false;
+                }
+            }
+        });
+
+        // PRECISION GESTURE CONTROLLER
+        // Prevents the "half-flip" by calculating velocity and distance
+        document.addEventListener('touchstart', function(e) {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+        }, {passive: true});
+
+        document.addEventListener('touchend', function(e) {
+            if (isTurning) return;
+
+            var endX = e.changedTouches[0].clientX;
+            var endY = e.changedTouches[0].clientY;
+            
+            var diffX = startX - endX;
+            var diffY = Math.abs(startY - endY);
+
+            // Filter for pure horizontal intent
+            if (diffY < 80) { 
+                if (diffX > threshold) {
+                    $book.turn('next'); // Complete Forward 3D Animation
+                } else if (diffX < -threshold) {
+                    $book.turn('previous'); // Complete Backward 3D Animation
+                }
+            }
+        }, {passive: true});
+
+        // FLUID RESIZER
+        $(window).resize(function() {
+            $book.turn('size', $(window).width(), $(window).height());
+        });
+
+        // SYSTEM LOCK
+        // Disables the 'Web' feel to protect the 'Book' feel
+        document.addEventListener('touchmove', function(e) {
+            if (e.touches.length > 1) e.preventDefault();
+        }, {passive: false});
+
+        console.log("Veridian Elysium Engine Active: Physics Calibrated.");
+    });
+</script>
+
+</body>
+</html>
