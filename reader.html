@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Veridian Immersive Reader</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/turn.js/3/turn.min.js"></script>
+    <style>
+        body { margin: 0; background-color: #1a1a1a; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; width: 100vw; }
+        #flipbook { width: 100vw !important; height: 100vh !important; }
+        .page { background-color: #fdf6e3; padding: 40px; box-sizing: border-box; font-family: 'Georgia', serif; font-size: 1.2rem; line-height: 1.6; width: 100vw; height: 100vh; }
+        .cover { background-color: #007066 !important; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .back-btn { position: absolute; top: 20px; left: 20px; z-index: 1000; color: white; background: rgba(0,0,0,0.5); border: none; padding: 10px 20px; border-radius: 30px; font-weight: bold; }
+        .page-num { position: absolute; bottom: 20px; width: 100%; text-align: center; font-size: 0.8rem; color: #999; left: 0; }
+    </style>
+</head>
+<body>
+
+    <button class="back-btn" onclick="location.href='index.html'">✕ Close</button>
+
+    <div id="flipbook">
+        <div class="page cover">
+            <h1>Veridian Origins</h1>
+            <p style="margin-top: 20px; opacity: 0.8;">Swipe corner to begin</p>
+        </div>
+        
+        <div class="page">
+            <h2 style="color:#007066">Chapter 1</h2>
+            <p>The dawn was cold... the archives stood silent, holding secrets that had not been whispered for centuries.</p>
+            <div class="page-num">1</div>
+        </div>
+        
+        <div class="page">
+            <p>You feel the texture of the paper beneath your fingertips. This is no longer just a digital screen; it is a gateway.</p>
+            <div class="page-num">2</div>
+        </div>
+        
+        <div class="page">
+            <p>The journey has only just begun. The archives await your return.</p>
+            <div class="page-num">3</div>
+        </div>
+    </div>
+
+    <script>
+        $(window).ready(function() {
+            $('#flipbook').turn({
+                width: window.innerWidth,
+                height: window.innerHeight,
+                display: 'single', 
+                acceleration: true,
+                gradients: true,
+                elevation: 120, // High elevation ensures the page flips fully
+                duration: 1000, // 1 second turn time for smooth physics
+                when: {
+                    turning: function(event, page, view) {
+                        // Animation Trigger
+                    }
+                }
+            });
+        });
+
+        $(window).resize(function() {
+            $('#flipbook').turn('size', window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
