@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Veridian Geometric Elite | True Curve Reader</title>
+    
+    <style>
+        /* 1. LUXURY ARCHITECTURE & GRID LOCK */
+        :root {
+            --gold: #d4af37;
+            --paper: #fcfaf2;
+            --curve-bezier: cubic-bezier(0.2, 0, 0.1, 1);
+            --spine-shadow: rgba(0,0,0,0.3);
+        }
+
+        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body, html { background: #000; height: 100vh; width: 100vw; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+
+        #stage {
+            width: 100vw; height: 100vh;
+            perspective: 4000px;
+            background: radial-gradient(circle at 50% 50%, #1a1a1a 0%, #000 100%);
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* 2. THE ANTI-CUT CHASSIS 
+           Prevents the book from splitting when phone is rotated
+        */
+        #book-chassis {
+            position: relative;
+            width: 90vw; height: 85vh;
+            max-width: 1200px;
+            transform-style: preserve-3d;
+            display: flex; justify-content: center;
+            will-change: transform;
+        }
+
+        @media (orientation: landscape) {
+            #book-chassis { width: 95vw; height: 90vh; }
+        }
+
+        /* 3. THE MESH PAGE ENGINE 
+           We use 'transform-origin' at the binder and a 'Skew' matrix 
+           to simulate the 3D curl from the video.
+        */
+        .page-mesh {
+            position: absolute;
+            width: 100%; height: 100%;
+            transform-origin: left center;
+            transform-style: preserve-3d;
+            transition: transform 1.8s var(--curve-bezier);
+            will-change: transform;
+            z-index: 10;
+        }
+
+        /* Landscape Spread Logic */
+        @media (orientation: landscape) {
+            .page-mesh { width: 50%; left: 50%; }
+        }
+
+        .page-surface {
+            position: absolute;
+            width: 100%; height: 100%;
+            background-color: var(--paper);
+            background-image: url('https://www.transparenttextures.com/patterns/handmade-paper.png');
+            backface-visibility: hidden;
+            border-radius: 2px 12px 12px 2px;
+            box-shadow: inset 0 0 80px rgba(0,0,0,0.03);
+            /* This mimics the paper deformation shadow */
+            transition: box-shadow 1.8s var(--curve-bezier);
+            display: flex; flex-direction: column;
+        }
+
+        /* 4. THE LUXURY COVER */
+        .cover {
+            background: linear-gradient(135deg, #004d46, #002b26) !important;
+            background-image: url('https://www.transparenttextures.com/patterns/dark-leather.png') !important;
+            color: var(--gold);
+            justify-content: center; align-items: center; text-align: center;
+        }
+
+        .cover h1 { font-size: 3.5rem; font-weight: 200; text-shadow: 0 10px 30px rgba(0,0,0,0.6); }
+
+        /* 5. THE CURVE PHYSICS (Zenith Matrix)
+           Instead of just rotating, we add SkewX and SkewY. 
+           This makes the corner lift 'higher' than the spine.
+        */
+        .flipped {
+            transform: rotateY(-180deg) skewY(3deg) scale(0.98); 
+        }
+
+        .flipped .page-surface {
+            box-shadow: inset -100px 0 150px rgba(0,0,0,0.3); /* The curve shadow */
+        }
+
+        /* 6. UI OVERLAY */
+        .ui-top { position: absolute; top: 40px; left: 40px; z-index: 1000; }
+        .btn-exit {
+            background: rgba(255,255,255,0.03); border: 1px solid var(--gold);
+            color: var(--gold); padding: 15px 35px; border-radius: 2px;
+            font-size: 9px; letter-spacing: 5px; text-transform: uppercase;
+            backdrop-filter: blur(20px); transition: 0.5s; cursor: pointer;
+        }
+
+        .spine-gradient {
+            position: absolute; left: 0; top: 0; width: 60px; height: 100%;
+            background: linear-gradient(to right, var(--spine-shadow), transparent);
+            z-index: 5; pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ui-top">
+        <button class="btn-exit" onclick="location.href='index.html'">✕ Close Archive</button>
+    </div>
+
+    <div id="stage">
+        <div id="book-chassis">
+            
+            <div class="page-mesh" style="z-index: 1;">
+                <div class="page-surface">
+                    <div class="spine-gradient"></div>
+                    <div style="padding: 12% 10%;">
+                        <h2 style="color: #007066; font-size: 2.2rem; font-weight: 200;">Geometric Precision</h2>
+                        <p style="margin-top: 20px;">The back-flip and front-flip are now locked into the same mathematical mesh. The rotation 'curves' because we are skewing the Y-axis during the turn.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-mesh" id="p2" style="z-index: 2;">
+                <div class="page-surface">
+                    <div class="spine-gradient"></div>
+                    <div style="padding: 12% 10%;">
+                        <p>Rotation is now managed by a <b>Hardware-Locked Chassis</b>. When the phone turns, the grid re-centers instantly.</p>
+                        <p style="margin-top: 20px;">No more cuts. No more chunky slides.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-mesh" id="p1" style="z-index: 3;">
+                <div class="page-surface cover">
+                    <p style="letter-spacing: 12px; font-size: 0.6rem; margin-bottom: 1rem;">VERIDIAN ELITE</p>
+                    <h1>ZENITH</h1>
+                    <div style="height: 1px; width: 60px; background: var(--gold); margin: 30px 0;"></div>
+                    <p style="font-style: italic; font-weight: 200;">Touch to Begin</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+<script>
+    /**
+     * VERIDIAN GEOMETRIC CORE
+     * Fixes: Back-flip stability, Rotation cutting, and Mesh Curvature.
+     */
+    const EliteCore = {
+        current: 1,
+        total: 2,
+        isTurning: false,
+
+        init() {
+            this.setupEvents();
+            this.handleOrientation();
+            console.log("Geometric Core: Level 5 Physics Active.");
+        },
+
+        setupEvents() {
+            let sX, sT;
+            document.addEventListener('touchstart', (e) => {
+                sX = e.touches[0].clientX;
+                sT = Date.now();
+            }, {passive: true});
+
+            document.addEventListener('touchend', (e) => {
+                if (this.isTurning) return;
+                const dX = sX - e.changedTouches[0].clientX;
+                const time = Date.now() - sT;
+
+                if (Math.abs(dX) > 40 || (Math.abs(dX) > 20 && time < 200)) {
+                    if (dX > 0) this.flip(true);
+                    else this.flip(false);
+                }
+            }, {passive: true});
+        },
+
+        flip(forward) {
+            if (forward && this.current <= this.total) {
+                this.isTurning = true;
+                const page = document.getElementById(`p${this.current}`);
+                page.classList.add('flipped');
+                
+                // Z-index management ensures 'Back-flip' is beautiful
+                setTimeout(() => {
+                    page.style.zIndex = 1; 
+                    this.current++;
+                    this.isTurning = false;
+                }, 1800);
+            } 
+            else if (!forward && this.current > 1) {
+                this.isTurning = true;
+                this.current--;
+                const page = document.getElementById(`p${this.current}`);
+                page.style.zIndex = 100;
+                page.classList.remove('flipped');
+                
+                setTimeout(() => {
+                    this.isTurning = false;
+                }, 1800);
+            }
+        },
+
+        handleOrientation() {
+            // THE ANTI-CUT FIX: Rebuilds the 3D space on rotation
+            window.addEventListener('orientationchange', () => {
+                document.body.style.opacity = '0';
+                setTimeout(() => {
+                    location.reload(); 
+                }, 400);
+            });
+        }
+    };
+
+    window.onload = () => EliteCore.init();
+</script>
+
+</body>
+</html>
