@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Veridian | Archive of Peace</title>
+    <style>
+        :root {
+            --veridian: #004d40;
+            --soft-glow: #00796b;
+            --gold: #d4af37;
+            --paper: #fcfaf2;
+            --shadow: rgba(0, 33, 28, 0.4);
+        }
+        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        
+        /* THE VAULT: Warm, lit, and calm */
+        body { 
+            background: radial-gradient(circle at 50% 30%, var(--soft-glow) 0%, var(--veridian) 70%, #001a16 100%);
+            height: 100vh; width: 100vw; overflow: hidden; font-family: "Georgia", serif; 
+        }
+
+        /* --- 1. LIBRARY (THE VAULT) --- */
+        #library {
+            position: fixed; inset: 0; z-index: 100;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: all 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .vault-title { color: var(--gold); letter-spacing: 10px; font-weight: 200; margin-bottom: 50px; opacity: 0.8; }
+        
+        .book-container { perspective: 1500px; }
+        .book-cover {
+            width: 210px; height: 300px; 
+            background: linear-gradient(135deg, #003d33 0%, var(--veridian) 100%);
+            border-radius: 4px 18px 18px 4px; border-left: 12px solid #002520;
+            box-shadow: 0 30px 70px var(--shadow), 0 0 20px rgba(212,175,55,0.1);
+            cursor: pointer; transition: 0.6s ease;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .book-cover:hover { transform: translateY(-10px) rotateY(-10deg); box-shadow: 0 40px 80px rgba(0,0,0,0.6); }
+
+        /* --- 2. READER (THE SANCTUARY) --- */
+        #reader {
+            position: fixed; inset: 0; z-index: 50; opacity: 0; pointer-events: none;
+            display: flex; align-items: center; justify-content: center; transition: opacity 1s;
+        }
+        body.is-reading #reader { opacity: 1; pointer-events: auto; }
+        body.is-reading #library { transform: scale(0.9) translateY(-50px); filter: blur(20px); opacity: 0; }
+
+        #book-frame { position: relative; width: 85vw; height: 78vh; max-width: 800px; perspective: 3000px; }
+        .page {
+            position: absolute; inset: 0; transform-origin: left center;
+            transform-style: preserve-3d; transition: transform 1.5s cubic-bezier(0.15, 0, 0.15, 1);
+        }
+        .page-inner {
+            position: absolute; inset: 0; background: var(--paper);
+            border-radius: 4px 60px 60px 4px; padding: 15% 12%;
+            box-shadow: inset 40px 0 80px rgba(0,0,0,0.03), 20px 20px 60px rgba(0,0,0,0.1);
+            backface-visibility: hidden; border: 1px solid rgba(0,0,0,0.05);
+        }
+        .flipped { transform: rotateY(-175deg) rotateZ(-15deg) skewY(10deg) scale(0.95); }
+
+        /* --- 3. THE "SUMMONED" HUD --- */
+        #hud {
+            position: fixed; inset: 0; z-index: 1000; pointer-events: none;
+            display: flex; flex-direction: column; justify-content: space-between;
+            padding: 40px; opacity: 0; transition: 0.5s ease;
+        }
+        #hud.visible { opacity: 1; pointer-events: auto; background: rgba(0,0,0,0.2); }
+        
+        .hud-top { display: flex; justify-content: space-between; align-items: center; }
+        .hud-bottom { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+        
+        .oracle-btn {
+            width: 50px; height: 50px; border-radius: 50%; border: 1px solid var(--gold);
+            background: rgba(0,77,64,0.8); color: var(--gold); display: flex;
+            align-items: center; justify-content: center; cursor: pointer;
+        }
+        #progress-bar { width: 200px; height: 2px; background: rgba(212,175,55,0.2); position: relative; }
+        #progress-fill { position: absolute; left: 0; height: 100%; background: var(--gold); transition: 1s; }
+
+        .sentence { opacity: 0.2; transition: 0.8s; color: #111; font-size: 1.2rem; }
+        .active { opacity: 1; background: var(--hlight); }
+    </style>
+</head>
+<body>
+
+    <section id="library">
+        <h2 class="vault-title">VERIDIAN ARCHIVE</h2>
+        <div class="book-container">
+            <div class="book-cover" onclick="UI.open()">
+                <div style="color:var(--gold); letter-spacing:8px;">ONYX</div>
+            </div>
+        </div>
+    </section>
+
+    <section id="reader" onclick="UI.toggleHUD(event)">
+        <div id="book-frame">
+            <div class="page" id="p2" style="z-index: 1;">
+                <div class="page-inner">
+                    <p class="sentence">The buttons have vanished to honor the text.</p><br><br>
+                    <p class="sentence">Tap the center of the page to summon the Oracle.</p>
+                </div>
+            </div>
+            <div class="page" id="p1" style="z-index: 2;">
+                <div class="page-inner" style="display:flex; flex-direction:column; justify-content:center; text-align:center;">
+                    <h1 style="color:var(--veridian); letter-spacing:15px; font-weight:200;">ONYX</h1>
+                    <p class="sentence" style="margin-top:20px;">Swipe anywhere to begin.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div id="hud">
+        <div class="hud-top">
+            <div style="color:var(--gold); font-size:10px; letter-spacing:4px; cursor:pointer;" onclick="UI.close()">← SHELF</div>
+            <div class="oracle-btn" onclick="Narrator.toggle()">◈</div>
+        </div>
+        <div class="hud-bottom">
+            <div id="progress-bar"><div id="progress-fill" style="width: 50%;"></div></div>
+            <div style="color:var(--gold); font-size:9px; letter-spacing:2px;">MANUSCRIPT // P. <span id="page-num">1</span></div>
+        </div>
+    </div>
+
+<script>
+    const UI = {
+        open() { document.body.classList.add('is-reading'); Narrator.sfx.play().then(()=>Narrator.sfx.pause()); },
+        close() { document.body.classList.remove('is-reading'); this.toggleHUD(); Narrator.stop(); },
+        toggleHUD(e) {
+            // Only toggle if clicking the middle, not swiping
+            if (e && e.target.closest('.oracle-btn')) return;
+            document.getElementById('hud').classList.toggle('visible');
+        }
+    };
+
+    const Narrator = {
+        idx: 1, max: 2, playing: false,
+        init() {
+            this.sfx = new Audio('https://www.soundjay.com/misc/sounds/paper-flip-1.mp3');
+            this.bindGestures();
+        },
+        bindGestures() {
+            let sX;
+            document.addEventListener('touchstart', e => sX = e.touches[0].clientX);
+            document.addEventListener('touchend', e => {
+                let diff = sX - e.changedTouches[0].clientX;
+                if (diff > 50) this.turn(); 
+            });
+        },
+        turn() {
+            const el = document.getElementById(`p${this.idx}`);
+            if (el && this.idx < this.max) {
+                el.classList.add('flipped');
+                this.sfx.currentTime = 0; this.sfx.play();
+                setTimeout(() => { 
+                    el.style.zIndex = 1; 
+                    this.idx++; 
+                    document.getElementById('page-num').innerText = this.idx;
+                    if(this.playing) this.speak(); 
+                }, 1500);
+            }
+        },
+        toggle() { this.playing = !this.playing; if(this.playing) this.speak(); else this.stop(); },
+        stop() { window.speechSynthesis.cancel(); this.playing = false; },
+        speak() {
+            const lines = document.querySelectorAll(`#p${this.idx} .sentence`);
+            let lIdx = 0;
+            const next = () => {
+                if (!this.playing) return;
+                if (lIdx >= lines.length) { this.turn(); return; }
+                lines.forEach(l => l.classList.remove('active'));
+                lines[lIdx].classList.add('active');
+                let ut = new SpeechSynthesisUtterance(lines[lIdx].innerText);
+                ut.onend = () => { lIdx++; next(); };
+                window.speechSynthesis.speak(ut);
+            };
+            next();
+        }
+    };
+    window.onload = () => Narrator.init();
+</script>
+</body>
+</html>
