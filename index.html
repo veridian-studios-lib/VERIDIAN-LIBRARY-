@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Veridian Vault | Lumina</title>
+    <style>
+        :root {
+            --veridian: #004d40;
+            --veridian-light: #00695c;
+            --gold: #d4af37;
+            --paper: #fcfaf2;
+            --shadow: rgba(0,0,0,0.4);
+            --curve: cubic-bezier(0.2, 0, 0.2, 1);
+        }
+        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        
+        /* THE VAULT: Now visible with Veridian gradients and soft lighting */
+        body { 
+            background: radial-gradient(circle at 50% 40%, var(--veridian-light) 0%, var(--veridian) 60%, #001a16 100%);
+            height: 100vh; width: 100vw; overflow: hidden; font-family: "Georgia", serif; 
+        }
+
+        #loader {
+            position: fixed; inset: 0; z-index: 9999; background: var(--veridian);
+            display: flex; align-items: center; justify-content: center;
+            transition: opacity 1.5s ease;
+        }
+        #loader.fade { opacity: 0; pointer-events: none; }
+
+        /* --- 1. THE VISIBLE LIBRARY --- */
+        #library {
+            position: fixed; inset: 0; z-index: 100;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: all 1s var(--curve);
+        }
+        .shelf-label { 
+            color: var(--gold); letter-spacing: 12px; margin-bottom: 40px; 
+            text-shadow: 0 4px 10px var(--shadow); font-weight: 200; opacity: 0.9;
+        }
+        .book-obj {
+            width: 200px; height: 280px; 
+            background: linear-gradient(135deg, #00332c 0%, #004d40 100%);
+            border-radius: 4px 15px 15px 4px; border-left: 10px solid #002520;
+            box-shadow: 0 25px 50px var(--shadow), 0 0 30px rgba(212,175,55,0.2);
+            cursor: pointer; transition: 0.5s var(--curve);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .book-obj:hover { transform: translateY(-15px) scale(1.05); box-shadow: 0 30px 60px var(--gold); }
+
+        /* --- 2. THE READER --- */
+        #reader {
+            position: fixed; inset: 0; z-index: 50; opacity: 0; pointer-events: none;
+            display: flex; align-items: center; justify-content: center;
+            transition: opacity 0.8s;
+        }
+        body.is-reading #reader { opacity: 1; pointer-events: auto; }
+        body.is-reading #library { transform: scale(0.8) translateY(-100px); filter: blur(20px); opacity: 0; }
+
+        #book-viewport { position: relative; width: 85vw; height: 75vh; max-width: 800px; perspective: 2500px; }
+        
+        .page {
+            position: absolute; inset: 0; transform-origin: left center;
+            transform-style: preserve-3d; transition: transform 1.4s var(--curve);
+        }
+        .page-skin {
+            position: absolute; inset: 0; background: var(--paper);
+            border-radius: 4px 50px 50px 4px; padding: 15% 12%;
+            box-shadow: inset 30px 0 60px rgba(0,0,0,0.05);
+            backface-visibility: hidden; border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        /* UPDATED FLIP: Aggressive "Peel" logic */
+        .page.flipped {
+            transform: rotateY(-170deg) rotateZ(-20deg) skewY(15deg) translateZ(50px);
+        }
+
+        /* --- 3. UI ELEMENTS --- */
+        .sentence { opacity: 0.25; transition: 0.6s; display: inline; color: #111; font-size: 1.1rem; line-height: 1.7; }
+        .active { opacity: 1; background: var(--hlight); border-radius: 3px; }
+
+        .btn {
+            position: fixed; top: 40px; z-index: 1000;
+            background: rgba(0,77,64,0.6); border: 1px solid var(--gold);
+            color: var(--gold); padding: 8px 20px; border-radius: 20px;
+            font-size: 10px; letter-spacing: 3px; cursor: pointer; backdrop-filter: blur(8px);
+        }
+        #back-btn { left: 40px; opacity: 0; }
+        body.is-reading #back-btn { opacity: 1; }
+        #audio-btn { right: 40px; }
+    </style>
+</head>
+<body>
+
+    <div id="loader"><p style="color:var(--gold); letter-spacing:10px;">VERIDIAN</p></div>
+
+    <div id="back-btn" class="btn" onclick="App.close()">← SHELF</div>
+    <div id="audio-btn" class="btn" onclick="Narrator.toggle()">◈ NARRATE</div>
+
+    <section id="library">
+        <h1 class="shelf-label">THE VAULT</h1>
+        <div class="book-obj" onclick="App.open()">
+            <div style="color:var(--gold); letter-spacing:5px;">ONYX</div>
+        </div>
+    </section>
+
+    <section id="reader">
+        <div id="book-viewport" id="gesture-zone">
+            <div class="page" id="p2" style="z-index: 1;">
+                <div class="page-skin">
+                    <p class="sentence">The vault is now lit with Veridian light.</p><br><br>
+                    <p class="sentence">Swipe anywhere on this page to flip manually.</p>
+                </div>
+            </div>
+            <div class="page" id="p1" style="z-index: 2;">
+                <div class="page-skin" style="display:flex; flex-direction:column; justify-content:center; text-align:center;">
+                    <h1 style="color:var(--veridian); letter-spacing:15px; font-weight:200;">ONYX</h1>
+                    <p class="sentence" style="margin-top:20px;">Manual Swipe Restored.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+<script>
+    const App = {
+        init() {
+            setTimeout(() => document.getElementById('loader').classList.add('fade'), 1500);
+            Narrator.init();
+        },
+        open() { 
+            document.body.classList.add('is-reading');
+            Narrator.sfx.play().then(() => Narrator.sfx.pause());
+        },
+        close() { 
+            document.body.classList.remove('is-reading');
+            Narrator.stop();
+        }
+    };
+
+    const Narrator = {
+        idx: 1, max: 2, playing: false,
+        init() {
+            this.sfx = new Audio('https://www.soundjay.com/misc/sounds/paper-flip-1.mp3');
+            this.bindGestures();
+        },
+        bindGestures() {
+            let startX, startY;
+            // Listen to the whole screen for swipes
+            document.addEventListener('touchstart', e => {
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+            }, {passive: true});
+
+            document.addEventListener('touchend', e => {
+                let endX = e.changedTouches[0].clientX;
+                let endY = e.changedTouches[0].clientY;
+                let diffX = startX - endX;
+                let diffY = Math.abs(startY - endY);
+
+                // If swipe is horizontal and long enough, flip
+                if (diffX > 60 && diffY < 100) {
+                    this.turn();
+                }
+            }, {passive: true});
+        },
+        toggle() {
+            this.playing = !this.playing;
+            if (this.playing) this.speak();
+            else this.stop();
+        },
+        stop() {
+            window.speechSynthesis.cancel();
+            this.playing = false;
+        },
+        turn() {
+            const el = document.getElementById(`p${this.idx}`);
+            if (el && this.idx < this.max) {
+                el.classList.add('flipped');
+                this.sfx.currentTime = 0;
+                this.sfx.play();
+                setTimeout(() => {
+                    el.style.zIndex = 1;
+                    this.idx++;
+                    if (this.playing) this.speak();
+                }, 1400);
+            }
+        },
+        speak() {
+            const lines = document.querySelectorAll(`#p${this.idx} .sentence`);
+            let lIdx = 0;
+            const step = () => {
+                if (!this.playing) return;
+                if (lIdx >= lines.length) { this.turn(); return; }
+                lines.forEach(l => l.classList.remove('active'));
+                lines[lIdx].classList.add('active');
+                let ut = new SpeechSynthesisUtterance(lines[lIdx].innerText);
+                ut.onend = () => { lIdx++; step(); };
+                window.speechSynthesis.speak(ut);
+            };
+            step();
+        }
+    };
+
+    window.onload = App.init;
+</script>
+</body>
+</html>
