@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Veridian Onyx | Grave Voice Edition</title>
+    <style>
+        :root {
+            --gold: #d4af37;
+            --paper: #fdfaf2;
+            --hlight: rgba(212, 175, 55, 0.4);
+            --curve: cubic-bezier(0.7, 0, 0.3, 1);
+        }
+        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body, html { background: #000; height: 100vh; width: 100vw; overflow: hidden; font-family: "Georgia", serif; }
+
+        #viewport {
+            position: fixed; inset: 0;
+            perspective: 2000px; /* Stronger depth for more curve visibility */
+            background: radial-gradient(circle at 50% 50%, #111 0%, #000 100%);
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        #book-frame {
+            position: relative; width: 85vw; height: 75vh;
+            max-width: 850px; transform-style: preserve-3d;
+        }
+
+        /* THE CURVATURE MESH */
+        .page-node {
+            position: absolute; inset: 0;
+            transform-style: preserve-3d; transform-origin: left center;
+            transition: transform 2.2s var(--curve);
+            will-change: transform; z-index: 5;
+        }
+        @media (orientation: landscape) { .page-node { width: 50%; left: 50%; } }
+
+        .page-skin {
+            position: absolute; inset: 0;
+            background: var(--paper) url('https://www.transparenttextures.com/patterns/handmade-paper.png');
+            backface-visibility: hidden; 
+            border-radius: 2px 25px 25px 2px;
+            box-shadow: inset 25px 0 60px rgba(0,0,0,0.05);
+            padding: 15% 12%; overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        /* THE "PEEL" ANIMATION 
+           Adding rotateZ makes the page corner "dip" as it turns, 
+           mimicking the physical weight of paper.
+        */
+        .flipped { 
+            transform: rotateY(-180deg) rotateZ(-3deg) skewY(7deg) scale(0.92) translateZ(150px) !important; 
+        }
+        .flipped .page-skin { 
+            box-shadow: inset -120px 0 150px rgba(0,0,0,0.5); 
+        }
+
+        /* TEXT HIGHLIGHTING */
+        .sentence { display: inline; transition: 0.6s ease; opacity: 0.4; }
+        .reading { color: #000; opacity: 1; background: var(--hlight); box-shadow: 0 0 15px var(--hlight); border-radius: 4px; }
+
+        /* HUD & CONTROLS */
+        #ui-layer {
+            position: fixed; top: 40px; right: 40px; 
+            z-index: 9999;
+        }
+        .btn-audio {
+            width: 50px; height: 50px; border-radius: 50%;
+            border: 1px solid var(--gold); background: rgba(0,0,0,0.8);
+            color: var(--gold); display: flex; align-items: center; justify-content: center;
+            cursor: pointer; pointer-events: auto; backdrop-filter: blur(10px);
+            font-size: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        #oracle-hud {
+            position: fixed; bottom: 50px; width: 100%;
+            display: flex; flex-direction: column; align-items: center; z-index: 999;
+        }
+        #track { width: 220px; height: 1px; background: rgba(212, 175, 55, 0.15); position: relative; }
+        #fill { 
+            position: absolute; left: 0; top: 0; height: 100%; width: 0%; 
+            background: var(--gold); box-shadow: 0 0 15px var(--gold);
+            transition: width 1.8s var(--curve);
+        }
+        .status-text { margin-top: 20px; color: var(--gold); font-size: 8px; letter-spacing: 6px; opacity: 0.4; text-transform: uppercase; }
+    </style>
+</head>
+<body>
+
+    <div id="ui-layer">
+        <div class="btn-audio" onclick="Onyx.toggleAudio()">◈</div>
+    </div>
+
+    <div id="viewport">
+        <div id="book-frame">
+            <div class="page-node" id="p2" style="z-index: 1;">
+                <div class="page-skin">
+                    <p class="sentence">The curvature of the manuscript responds to the gravity of the reader.</p><br><br>
+                    <p class="sentence">A grave voice now narrates the silence of the archive.</p><br><br>
+                    <p class="sentence">Notice the corner of the page as it yields to the turn.</p>
+                </div>
+            </div>
+            <div class="page-node" id="p1" style="z-index: 2;">
+                <div class="page-skin" style="text-align: center; display: flex; flex-direction: column; justify-content: center;">
+                    <p style="letter-spacing: 12px; font-size: 0.6rem; color: var(--gold); margin-bottom: 20px;">VERIDIAN ORIGINS</p>
+                    <h1 style="color:var(--gold); font-weight: 200; letter-spacing: 15px; margin-bottom: 40px; font-size: 3.5rem;">ONYX</h1>
+                    <p class="sentence">Tap the oracle above to listen.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="oracle-hud">
+        <div id="track"><div id="fill"></div></div>
+        <div class="status-text" id="status">MANUSCRIPT // P. 1</div>
+    </div>
+
+<script>
+    const Onyx = {
+        idx: 1, total: 2, reading: false,
+        synth: window.speechSynthesis,
+
+        init() {
+            // High-fidelity crispy flip sound
+            this.sound = new Audio('https://assets.mixkit.co/active_storage/sfx/2403/2403-preview.mp3');
+            this.sound.volume = 0.12;
+            this.setupGestures();
+            this.updateHUD();
+        },
+
+        setupGestures() {
+            let startX;
+            document.addEventListener('touchstart', e => { 
+                startX = e.touches[0].clientX;
+                // Force audio unlock for mobile
+                this.sound.play().then(() => { this.sound.pause(); this.sound.currentTime = 0; }).catch(()=>{});
+            }, {passive:true});
+            document.addEventListener('touchend', e => {
+                let diff = startX - e.changedTouches[0].clientX;
+                if (Math.abs(diff) > 60) diff > 0 ? this.turn(true) : this.turn(false);
+            }, {passive:true});
+        },
+
+        turn(forward) {
+            if (forward && this.idx < this.total) {
+                const p = document.getElementById(`p${this.idx}`);
+                p.classList.add('flipped');
+                this.sound.currentTime = 0;
+                this.sound.play();
+                setTimeout(() => { p.style.zIndex = 1; this.idx++; this.updateHUD(); }, 1200);
+            } else if (!forward && this.idx > 1) {
+                this.idx--;
+                const p = document.getElementById(`p${this.idx}`);
+                p.style.zIndex = 100;
+                p.classList.remove('flipped');
+                this.sound.currentTime = 0;
+                this.sound.play();
+                this.updateHUD();
+            }
+        },
+
+        updateHUD() {
+            const p = (this.idx / this.total) * 100;
+            document.getElementById('fill').style.width = p + "%";
+            document.getElementById('status').innerText = `MANUSCRIPT // P. ${this.idx}`;
+        },
+
+        toggleAudio() {
+            if (this.reading) { this.synth.cancel(); this.reading = false; return; }
+            this.reading = true;
+            this.speak();
+        },
+
+        speak() {
+            const lines = document.querySelectorAll(`#p${this.idx} .sentence`);
+            let lIdx = 0;
+            
+            const run = () => {
+                if (!this.reading || lIdx >= lines.length) {
+                    if (this.idx < this.total) { 
+                        this.turn(true); 
+                        setTimeout(() => this.speak(), 3000); 
+                    }
+                    return;
+                }
+                lines.forEach(l => l.classList.remove('reading'));
+                lines[lIdx].classList.add('reading');
+
+                let ut = new SpeechSynthesisUtterance(lines[lIdx].innerText);
+                
+                // GRAVE VOICE PHYSICS:
+                ut.pitch = 0.5; // Deep, gravelly tone
+                ut.rate = 0.75;  // Slow, measured luxury pace
+                
+                // Attempt to find a male/deep voice if available
+                const voices = this.synth.getVoices();
+                const graveVoice = voices.find(v => v.name.includes('Male') || v.name.includes('Google UK English Male'));
+                if (graveVoice) ut.voice = graveVoice;
+
+                ut.onend = () => { lIdx++; run(); };
+                this.synth.speak(ut);
+            };
+            run();
+        }
+    };
+    window.onload = () => Onyx.init();
+</script>
+</body>
+</html>
