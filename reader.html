@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Veridian Apex | Physical Peel</title>
+    <style>
+        :root {
+            --gold: #d4af37;
+            --paper: #fdfaf2;
+            --hlight: rgba(212, 175, 55, 0.2);
+            /* Ultra-smooth organic timing */
+            --curve: cubic-bezier(0.6, 0, 0.2, 1);
+        }
+        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body, html { background: #000; height: 100vh; width: 100vw; overflow: hidden; }
+
+        #stage {
+            position: fixed; inset: 0;
+            perspective: 1500px; /* Stronger depth for massive curvature */
+            background: #000;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        #book-frame {
+            position: relative; width: 85vw; height: 75vh;
+            max-width: 800px; transform-style: preserve-3d;
+        }
+
+        .page-node {
+            position: absolute; inset: 0;
+            transform-style: preserve-3d; transform-origin: left center;
+            transition: transform 1.6s var(--curve);
+            will-change: transform;
+        }
+
+        .page-skin {
+            position: absolute; inset: 0;
+            background: var(--paper) url('https://www.transparenttextures.com/patterns/handmade-paper.png');
+            backface-visibility: hidden; 
+            border-radius: 4px 60px 60px 4px; /* Dramatic elegant corners */
+            box-shadow: inset 30px 0 60px rgba(0,0,0,0.05);
+            padding: 15% 12%; overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        /* THE "APEX PEEL" 
+           We use a massive rotateZ (-18deg) and skewY (18deg).
+           In 3D space, this forces the corner to "peel" toward the user's face
+           before the page crosses the spine. 
+        */
+        .peel-active { 
+            transform: rotateY(-180deg) rotateZ(-18deg) skewY(18deg) scale(0.88) translateZ(200px) !important; 
+        }
+        
+        .peel-active .page-skin { 
+            box-shadow: inset -150px 0 200px rgba(0,0,0,0.6), -50px 50px 80px rgba(0,0,0,0.5); 
+            filter: brightness(0.9);
+        }
+
+        /* GOLDEN ORACLE HUD */
+        #hud {
+            position: fixed; bottom: 50px; width: 100%;
+            display: flex; flex-direction: column; align-items: center; z-index: 999;
+        }
+        #track { width: 140px; height: 1px; background: rgba(212, 175, 55, 0.1); position: relative; }
+        #fill { 
+            position: absolute; left: 0; top: 0; height: 100%; width: 0%; 
+            background: var(--gold); box-shadow: 0 0 10px var(--gold);
+            transition: width 1s var(--curve);
+        }
+        .meta { margin-top: 15px; color: var(--gold); font-size: 7px; letter-spacing: 6px; opacity: 0.4; text-transform: uppercase; }
+
+        .btn-audio {
+            position: fixed; top: 40px; right: 40px; z-index: 1000;
+            width: 44px; height: 44px; border-radius: 50%;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            background: rgba(0,0,0,0.8); color: var(--gold);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; backdrop-filter: blur(10px);
+        }
+
+        /* TEXT HIGHLIGHTING */
+        .sentence { display: inline; transition: 0.6s; opacity: 0.3; color: #111; font-family: serif; }
+        .active { opacity: 1; background: var(--hlight); border-radius: 2px; }
+    </style>
+</head>
+<body>
+
+    <div class="btn-audio" onclick="Apex.toggleAudio()">◈</div>
+
+    <div id="stage">
+        <div id="book-frame">
+            <div class="page-node" id="p2" style="z-index: 1;">
+                <div class="page-skin">
+                    <p class="sentence">The curvature is now aggressive and parabolic.</p><br><br>
+                    <p class="sentence">The corner yields to your touch with physical weight.</p><br><br>
+                    <p class="sentence">The voice is now a deep, cinematic baritone.</p>
+                </div>
+            </div>
+            <div class="page-node" id="p1" style="z-index: 2;">
+                <div class="page-skin" style="text-align: center; display: flex; flex-direction: column; justify-content: center;">
+                    <h1 style="color:var(--gold); font-weight: 200; letter-spacing: 12px; margin-bottom: 20px; font-size: 2.8rem;">ONYX</h1>
+                    <p class="sentence">Swipe the corner to feel the peel.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="hud">
+        <div id="track"><div id="fill"></div></div>
+        <div class="meta" id="status">P. 1 // ZENITH</div>
+    </div>
+
+<script>
+    const Apex = {
+        idx: 1, total: 2, reading: false,
+        synth: window.speechSynthesis,
+
+        init() {
+            // New High-Fidelity Paper Audio (Crispy/Dry)
+            this.sound = new Audio('https://www.soundjay.com/misc/sounds/paper-flip-1.mp3');
+            this.sound.volume = 0.5;
+            this.setupGestures();
+            this.updateHUD();
+        },
+
+        setupGestures() {
+            let sX;
+            document.addEventListener('touchstart', e => { 
+                sX = e.touches[0].clientX;
+                // Force audio engine "Wake Up"
+                this.sound.play().then(() => { this.sound.pause(); this.sound.currentTime = 0; }).catch(()=>{});
+            }, {passive:true});
+
+            document.addEventListener('touchend', e => {
+                let dX = sX - e.changedTouches[0].clientX;
+                if (Math.abs(dX) > 60) dX > 0 ? this.turn(true) : this.turn(false);
+            }, {passive:true});
+        },
+
+        turn(fwd) {
+            if (fwd && this.idx < this.total) {
+                const p = document.getElementById(`p${this.idx}`);
+                p.classList.add('peel-active');
+                this.sound.currentTime = 0;
+                this.sound.play(); // CRISP PAPER SOUND
+                setTimeout(() => { p.style.zIndex = 1; this.idx++; this.updateHUD(); }, 1000);
+            } else if (!fwd && this.idx > 1) {
+                this.idx--;
+                const p = document.getElementById(`p${this.idx}`);
+                p.style.zIndex = 100;
+                p.classList.remove('peel-active');
+                this.sound.currentTime = 0;
+                this.sound.play();
+                this.updateHUD();
+            }
+        },
+
+        updateHUD() {
+            const p = (this.idx / this.total) * 100;
+            document.getElementById('fill').style.width = p + "%";
+            document.getElementById('status').innerText = `P. ${this.idx} // ZENITH`;
+        },
+
+        toggleAudio() {
+            if (this.reading) { this.synth.cancel(); this.reading = false; return; }
+            this.reading = true;
+            this.speak();
+        },
+
+        speak() {
+            const lines = document.querySelectorAll(`#p${this.idx} .sentence`);
+            let lIdx = 0;
+            const run = () => {
+                if (!this.reading || lIdx >= lines.length) {
+                    if (this.idx < this.total) { 
+                        setTimeout(() => { this.turn(true); this.speak(); }, 2500); 
+                    }
+                    return;
+                }
+                lines.forEach(l => l.classList.remove('active'));
+                lines[lIdx].classList.add('active');
+
+                let ut = new SpeechSynthesisUtterance(lines[lIdx].innerText);
+                ut.pitch = 0.6; // Deep Baritone
+                ut.rate = 0.8;  // Elegant Pace
+                
+                const voices = this.synth.getVoices();
+                const v = voices.find(v => v.lang.includes('en-GB') && v.name.includes('Male')) || voices[0];
+                if (v) ut.voice = v;
+
+                ut.onend = () => { lIdx++; run(); };
+                this.synth.speak(ut);
+            };
+            run();
+        }
+    };
+    window.onload = () => Apex.init();
+</script>
+</body>
+</html>
