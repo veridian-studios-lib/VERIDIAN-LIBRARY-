@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Veridian Absolute Zenith</title>
+    <style>
+        :root {
+            --gold: #d4af37;
+            --paper: #fcfaf2;
+            --hlight: rgba(212, 175, 55, 0.25);
+            --curve: cubic-bezier(0.25, 1, 0.35, 1);
+        }
+        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body, html { background: #000; height: 100vh; width: 100vw; overflow: hidden; font-family: "Georgia", serif; }
+
+        /* THE STAGE */
+        #viewport {
+            position: fixed; inset: 0;
+            perspective: 3500px;
+            background: radial-gradient(circle at 50% 50%, #151515 0%, #000 100%);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 1;
+        }
+
+        /* THE BOOK CHASSIS - Absolute centering */
+        #book-frame {
+            position: relative; width: 88vw; height: 78vh;
+            max-width: 900px; transform-style: preserve-3d;
+        }
+        @media (orientation: landscape) { #book-frame { width: 92vw; height: 88vh; } }
+
+        /* MESH DEFORMATION */
+        .page-node {
+            position: absolute; inset: 0;
+            transform-style: preserve-3d; transform-origin: left center;
+            transition: transform 1.6s var(--curve);
+            will-change: transform; z-index: 5;
+        }
+        @media (orientation: landscape) { .page-node { width: 50%; left: 50%; } }
+
+        .page-skin {
+            position: absolute; inset: 0;
+            background: var(--paper) url('https://www.transparenttextures.com/patterns/handmade-paper.png');
+            backface-visibility: hidden; border-radius: 2px 15px 15px 2px;
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.02);
+            padding: 12% 10%; overflow: hidden;
+            transition: box-shadow 1.6s var(--curve);
+        }
+
+        /* ORGANIC CURVE - Lifting the page corner */
+        .flipped { 
+            transform: rotateY(-180deg) skewY(3deg) scale(0.97) translateZ(80px) !important; 
+        }
+        .flipped .page-skin { box-shadow: inset -60px 0 100px rgba(0,0,0,0.3); }
+
+        /* HIGHLIGHTING */
+        .sentence { display: inline; border-radius: 2px; transition: 0.3s; }
+        .reading { background: var(--hlight); color: #000; box-shadow: 0 0 10px var(--hlight); }
+
+        /* HUD - FORCED ON TOP */
+        #hud-fixed {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 140px;
+            display: flex; flex-direction: column; align-items: center; 
+            justify-content: center; z-index: 999; pointer-events: none;
+        }
+        #slider-track {
+            width: 45%; height: 2px; background: rgba(212, 175, 55, 0.1);
+            position: relative; margin-bottom: 15px;
+        }
+        #slider-fill {
+            position: absolute; left: 0; top: 0; height: 100%; width: 0%;
+            background: var(--gold); box-shadow: 0 0 15px var(--gold);
+            transition: width 1s var(--curve);
+        }
+        .meta-text { color: var(--gold); font-size: 8px; letter-spacing: 5px; opacity: 0.6; }
+
+        .top-btn {
+            position: fixed; top: 40px; right: 40px; z-index: 1000;
+            background: rgba(0,0,0,0.6); border: 1px solid var(--gold);
+            color: var(--gold); padding: 12px 22px; font-size: 10px;
+            letter-spacing: 3px; cursor: pointer; backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body>
+
+    <button class="top-btn" onclick="Zenith.toggleAudio()">🔊 START AUDIO</button>
+
+    <div id="viewport">
+        <div id="book-frame">
+            
+            <div class="page-node" id="p2" style="z-index: 1;">
+                <div class="page-skin">
+                    <p class="sentence">The logic of the archive is now absolute.</p><br>
+                    <p class="sentence">With the clean-slate architecture, the mesh deformation is restored.</p><br>
+                    <p class="sentence">The golden slider at the base tracks your progress through the digital ink.</p>
+                </div>
+            </div>
+
+            <div class="page-node" id="p1" style="z-index: 2;">
+                <div class="page-skin" style="display: flex; flex-direction: column; justify-content: center; text-align: center;">
+                    <h1 style="color:var(--gold); font-weight: 200; font-size: 2.8rem; margin-bottom: 20px;">ZENITH</h1>
+                    <p class="sentence">Organic mesh deformation is active.</p><br>
+                    <p class="sentence">Audio synchronization is ready.</p><br>
+                    <p class="sentence">Swipe or use the audio button to explore.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="hud-fixed">
+        <div id="slider-track"><div id="slider-fill"></div></div>
+        <div class="meta-text" id="status">MANUSCRIPT // PAGE 1</div>
+    </div>
+
+<script>
+    const Zenith = {
+        idx: 1, total: 2, reading: false,
+        synth: window.speechSynthesis,
+        
+        init() {
+            this.audio = new Audio('https://www.soundjay.com/misc/sounds/paper-flip-1.mp3');
+            this.audio.volume = 0.1;
+            this.setupTouch();
+            this.updateHUD();
+        },
+
+        setupTouch() {
+            let x;
+            document.addEventListener('touchstart', e => { x = e.touches[0].clientX; }, {passive:true});
+            document.addEventListener('touchend', e => {
+                let d = x - e.changedTouches[0].clientX;
+                if (Math.abs(d) > 50) d > 0 ? this.turn(true) : this.turn(false);
+            }, {passive:true});
+        },
+
+        turn(forward) {
+            if (forward && this.idx < this.total) {
+                const p = document.getElementById(`p${this.idx}`);
+                p.classList.add('flipped');
+                this.audio.play().catch(()=>{});
+                setTimeout(() => { p.style.zIndex = 1; this.idx++; this.updateHUD(); }, 800);
+            } else if (!forward && this.idx > 1) {
+                this.idx--;
+                const p = document.getElementById(`p${this.idx}`);
+                p.style.zIndex = 100;
+                p.classList.remove('flipped');
+                this.audio.play().catch(()=>{});
+                this.updateHUD();
+            }
+        },
+
+        updateHUD() {
+            const p = (this.idx / this.total) * 100;
+            document.getElementById('slider-fill').style.width = p + "%";
+            document.getElementById('status').innerText = `MANUSCRIPT // PAGE ${this.idx}`;
+        },
+
+        toggleAudio() {
+            if (this.reading) { this.synth.cancel(); this.reading = false; return; }
+            this.reading = true;
+            this.speak();
+        },
+
+        speak() {
+            const sentences = document.querySelectorAll(`#p${this.idx} .sentence`);
+            let sIdx = 0;
+
+            const run = () => {
+                if (!this.reading || sIdx >= sentences.length) {
+                    if (this.idx < this.total) { 
+                        this.turn(true); 
+                        setTimeout(() => this.speak(), 2200); 
+                    }
+                    return;
+                }
+
+                sentences.forEach(s => s.classList.remove('reading'));
+                sentences[sIdx].classList.add('reading');
+
+                let ut = new SpeechSynthesisUtterance(sentences[sIdx].innerText);
+                ut.rate = 0.95;
+                ut.onend = () => { sIdx++; run(); };
+                this.synth.speak(ut);
+            };
+            run();
+        }
+    };
+
+    window.onload = () => Zenith.init();
+    window.onorientationchange = () => location.reload();
+</script>
+</body>
+</html>
