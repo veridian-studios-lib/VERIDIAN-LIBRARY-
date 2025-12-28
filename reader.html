@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Veridian Titan | AI Speech & Mesh Curl</title>
+    
+    <style>
+        :root {
+            --gold: #d4af37;
+            --paper: #fdfaf2;
+            --highlight: rgba(212, 175, 55, 0.3);
+            --curve-timing: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body, html { background: #050505; height: 100vh; width: 100vw; overflow: hidden; font-family: "Georgia", serif; }
+
+        #stage {
+            position: fixed; width: 100vw; height: 100vh;
+            perspective: 5000px;
+            background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* THE CHASSIS - Locks the book to prevent cutting on rotation */
+        #book-chassis {
+            position: relative; width: 85vw; height: 75vh;
+            max-width: 900px; transform-style: preserve-3d;
+        }
+        @media (orientation: landscape) { #book-chassis { width: 90vw; height: 85vh; } }
+
+        /* THE TRUE CURVE MESH */
+        .page-wrap {
+            position: absolute; width: 100%; height: 100%;
+            transform-style: preserve-3d; transform-origin: left center;
+            transition: transform 1.8s var(--curve-timing);
+            will-change: transform;
+        }
+        @media (orientation: landscape) { .page-wrap { width: 50%; left: 50%; } }
+
+        .page-content {
+            position: absolute; width: 100%; height: 100%;
+            background: var(--paper) url('https://www.transparenttextures.com/patterns/handmade-paper.png');
+            backface-visibility: hidden; border-radius: 2px 15px 15px 2px;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.02);
+            padding: 10% 8%; overflow: hidden;
+            transition: box-shadow 1.8s;
+        }
+
+        /* THE ORGANIC CURL EFFECT */
+        .is-flipping {
+            /* This skew + rotate combination mimics the video's mesh deformation */
+            transform: rotateY(-180deg) skewY(5deg) scale(0.95) translateZ(100px) !important;
+        }
+
+        /* HIGHLIGHTING SYSTEM */
+        .sentence { transition: background 0.3s; border-radius: 3px; padding: 2px 0; display: inline; }
+        .active-highlight { background: var(--highlight); color: #000; box-shadow: 0 0 8px var(--highlight); }
+
+        /* HUD - FIXED UI */
+        #hud {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 120px;
+            display: flex; flex-direction: column; align-items: center; z-index: 9999;
+            pointer-events: none;
+        }
+
+        #oracle-bar {
+            width: 40%; height: 2px; background: rgba(212, 175, 55, 0.1);
+            position: relative; overflow: hidden; margin-bottom: 15px;
+        }
+
+        #oracle-progress {
+            position: absolute; left: 0; top: 0; height: 100%; width: 0%;
+            background: var(--gold); box-shadow: 0 0 15px var(--gold);
+            transition: width 0.5s;
+        }
+
+        .meta { color: var(--gold); font-size: 9px; letter-spacing: 4px; opacity: 0.7; }
+
+        .controls { position: fixed; top: 40px; right: 40px; z-index: 10000; }
+        .btn-gold {
+            background: rgba(0,0,0,0.7); border: 1px solid var(--gold); color: var(--gold);
+            padding: 12px 20px; font-size: 10px; letter-spacing: 2px; cursor: pointer;
+            pointer-events: auto; backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <button class="btn-gold" onclick="Reader.toggleSpeech()">🔊 READ MANUSCRIPT</button>
+    </div>
+
+    <div id="stage">
+        <div id="book-chassis">
+            
+            <div class="page-wrap" id="p2" style="z-index: 1;">
+                <div class="page-content">
+                    <p class="sentence">The second chapter reveals the deeper secrets of the Veridian archive.</p>
+                    <p class="sentence">As the voice speaks, the progress bar reflects the journey of the soul.</p>
+                    <p class="sentence">When the final word of this page is spoken, the engine will automatically turn to the next section.</p>
+                </div>
+            </div>
+
+            <div class="page-wrap" id="p1" style="z-index: 2;">
+                <div class="page-content" style="text-align: center; display: flex; flex-direction: column; justify-content: center;">
+                    <h1 style="color:var(--gold); font-weight: 200; font-size: 3rem; margin-bottom: 20px;">TITAN</h1>
+                    <p class="sentence">Welcome to the premium archive experience.</p>
+                    <p class="sentence">This manuscript features automated mesh deformation and voice synchronization.</p>
+                    <p class="sentence">Tap the audio button to begin the immersive ritual.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="hud">
+        <div id="oracle-bar"><div id="oracle-progress"></div></div>
+        <div class="meta" id="counter">ARCHIVE // PAGE 1</div>
+    </div>
+
+<script>
+    const Reader = {
+        idx: 1,
+        total: 2,
+        isReading: false,
+        synth: window.speechSynthesis,
+        utterance: null,
+
+        init() {
+            this.flipSound = new Audio('https://www.soundjay.com/misc/sounds/paper-flip-1.mp3');
+            this.flipSound.volume = 0.1;
+            this.updateUI();
+            this.setupGestures();
+        },
+
+        setupGestures() {
+            let x;
+            document.addEventListener('touchstart', e => { x = e.touches[0].clientX; }, {passive:true});
+            document.addEventListener('touchend', e => {
+                let dist = x - e.changedTouches[0].clientX;
+                if (Math.abs(dist) > 50) dist > 0 ? this.next() : this.prev();
+            }, {passive:true});
+        },
+
+        next() {
+            if (this.idx >= this.total) return;
+            const p = document.getElementById(`p${this.idx}`);
+            p.classList.add('is-flipping');
+            this.flipSound.play().catch(()=>{});
+            setTimeout(() => { p.style.zIndex = 1; this.idx++; this.updateUI(); }, 1000);
+        },
+
+        prev() {
+            if (this.idx <= 1) return;
+            this.idx--;
+            const p = document.getElementById(`p${this.idx}`);
+            p.style.zIndex = 100;
+            p.classList.remove('is-flipping');
+            this.flipSound.play().catch(()=>{});
+            this.updateUI();
+        },
+
+        updateUI() {
+            const prog = (this.idx / this.total) * 100;
+            document.getElementById('oracle-progress').style.width = prog + "%";
+            document.getElementById('counter').innerText = `ARCHIVE // PAGE ${this.idx}`;
+        },
+
+        // SPEECH & HIGHLIGHTING ENGINE
+        toggleSpeech() {
+            if (this.isReading) {
+                this.synth.cancel();
+                this.isReading = false;
+                return;
+            }
+            this.isReading = true;
+            this.readCurrentPage();
+        },
+
+        readCurrentPage() {
+            const page = document.querySelector(`#p${this.idx} .page-content`);
+            const sentences = page.querySelectorAll('.sentence');
+            let sIdx = 0;
+
+            const speakSentence = () => {
+                if (!this.isReading || sIdx >= sentences.length) {
+                    if (this.idx < this.total) { 
+                        this.next(); 
+                        setTimeout(() => this.readCurrentPage(), 2000); 
+                    }
+                    return;
+                }
+
+                // Clear previous highlights
+                sentences.forEach(s => s.classList.remove('active-highlight'));
+                sentences[sIdx].classList.add('active-highlight');
+
+                this.utterance = new SpeechSynthesisUtterance(sentences[sIdx].innerText);
+                this.utterance.rate = 0.9; // Premium, slow reading
+                this.utterance.onend = () => {
+                    sIdx++;
+                    speakSentence();
+                };
+                this.synth.speak(this.utterance);
+            };
+
+            speakSentence();
+        }
+    };
+
+    window.onload = () => Reader.init();
+    window.onorientationchange = () => location.reload();
+</script>
+</body>
+</html>
