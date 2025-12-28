@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Veridian | Onyx Archive</title>
+    <style>
+        :root {
+            --gold: #d4af37;
+            --paper: #fdfaf2;
+            --hlight: rgba(212, 175, 55, 0.25);
+            --curve: cubic-bezier(0.7, 0, 0.3, 1);
+        }
+        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body, html { background: #0b0b0b; height: 100vh; width: 100vw; overflow: hidden; font-family: "Georgia", serif; }
+
+        /* --- LOADING SCREEN --- */
+        #loader {
+            position: fixed; inset: 0; z-index: 5000; background: #000;
+            display: flex; align-items: center; justify-content: center;
+            transition: opacity 1.5s ease;
+        }
+        #loader.fade-out { opacity: 0; pointer-events: none; }
+
+        /* --- LIBRARY LAYER --- */
+        #library-layer {
+            position: fixed; inset: 0; z-index: 10;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%); /* Spotlight effect */
+            transition: transform 1.2s var(--curve), opacity 1s;
+        }
+        body.is-reading #library-layer { transform: scale(1.5); opacity: 0; pointer-events: none; }
+
+        .book-item {
+            width: 200px; height: 280px; background: #222;
+            border-radius: 4px 15px 15px 4px; border-left: 10px solid #111;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.7), 0 0 15px rgba(212,175,55,0.1);
+            cursor: pointer; transition: 0.6s var(--curve);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .book-item:hover { transform: translateY(-10px); box-shadow: 0 20px 40px var(--gold); }
+
+        /* --- READER LAYER --- */
+        #reader-layer {
+            position: fixed; inset: 0; z-index: 5; opacity: 0; pointer-events: none;
+            transition: opacity 0.8s ease; display: flex; align-items: center; justify-content: center;
+        }
+        body.is-reading #reader-layer { opacity: 1; pointer-events: auto; }
+
+        #book-frame { position: relative; width: 85vw; height: 75vh; max-width: 800px; transform-style: preserve-3d; }
+        .page-node {
+            position: absolute; inset: 0; transform-style: preserve-3d; transform-origin: left center;
+            transition: transform 1.5s var(--curve);
+        }
+        .page-skin {
+            position: absolute; inset: 0; background: var(--paper); border-radius: 4px 50px 50px 4px;
+            padding: 15% 12%; border: 1px solid rgba(0,0,0,0.1); backface-visibility: hidden;
+        }
+        .flipped { transform: rotateY(-180deg) rotateZ(-15deg) skewY(10deg) scale(0.95) translateZ(100px) !important; }
+        
+        .sentence { display: inline; transition: 0.5s; opacity: 0.3; color: #111; font-size: 1.1rem; }
+        .active { opacity: 1; background: var(--hlight); }
+
+        /* --- CONTROLS --- */
+        #back-btn { position: fixed; top: 40px; left: 40px; z-index: 1000; color: var(--gold); font-size: 10px; letter-spacing: 3px; cursor: pointer; opacity: 0.6; }
+        .btn-audio { position: fixed; top: 40px; right: 40px; z-index: 1000; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--gold); background: rgba(0,0,0,0.5); color: var(--gold); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div id="loader"><p style="color:var(--gold); letter-spacing:5px;">AWAKENING...</p></div>
+    <div id="back-btn" onclick="UI.close()">← SHELF</div>
+    <div class="btn-audio" onclick="Onyx.toggle()">◈</div>
+
+    <main id="library-layer">
+        <div class="book-item" onclick="UI.open()">
+            <div style="color:var(--gold); letter-spacing:5px; text-align:center;">ONYX</div>
+        </div>
+    </main>
+
+    <main id="reader-layer">
+        <div id="book-frame">
+            <div class="page-node" id="p2" style="z-index: 1;">
+                <div class="page-skin">
+                    <p class="sentence">Swipe left to explore manually.</p><br><br>
+                    <p class="sentence">The light has been restored to the archive.</p>
+                </div>
+            </div>
+            <div class="page-node" id="p1" style="z-index: 2;">
+                <div class="page-skin" style="text-align: center; display: flex; flex-direction: column; justify-content: center;">
+                    <h1 style="color:var(--gold); font-weight: 200; letter-spacing: 15px;">ONYX</h1>
+                    <p class="sentence" style="margin-top:20px;">Manual swipe is active.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+<script>
+    const UI = {
+        init() { setTimeout(() => document.getElementById('loader').classList.add('fade-out'), 1500); },
+        open() { document.body.classList.add('is-reading'); Onyx.flipSfx.play().then(()=>Onyx.flipSfx.pause()); },
+        close() { document.body.classList.remove('is-reading'); window.speechSynthesis.cancel(); Onyx.running = false; }
+    };
+
+    const Onyx = {
+        idx: 1, total: 2, running: false,
+        init() {
+            this.flipSfx = new Audio('https://www.soundjay.com/misc/sounds/paper-flip-1.mp3');
+            this.setupGestures();
+        },
+        setupGestures() {
+            let sX;
+            document.addEventListener('touchstart', e => sX = e.touches[0].clientX);
+            document.addEventListener('touchend', e => {
+                let dX = sX - e.changedTouches[0].clientX;
+                if (dX > 50) this.turn(); // Manual Swipe Left
+            });
+        },
+        toggle() { this.running = !this.running; if(this.running) this.narrate(); else window.speechSynthesis.cancel(); },
+        turn() {
+            const p = document.getElementById(`p${this.idx}`);
+            if (p && this.idx < this.total) {
+                p.classList.add('flipped');
+                this.flipSfx.currentTime = 0; this.flipSfx.play();
+                setTimeout(() => { p.style.zIndex = 1; this.idx++; if(this.running) this.narrate(); }, 1500);
+            }
+        },
+        narrate() {
+            const lines = document.querySelectorAll(`#p${this.idx} .sentence`);
+            let lIdx = 0;
+            const next = () => {
+                if (!this.running) return;
+                if (lIdx >= lines.length) { this.turn(); return; }
+                lines.forEach(l => l.classList.remove('active'));
+                lines[lIdx].classList.add('active');
+                let ut = new SpeechSynthesisUtterance(lines[lIdx].innerText);
+                ut.onend = () => { lIdx++; next(); };
+                window.speechSynthesis.speak(ut);
+            };
+            next();
+        }
+    };
+    window.onload = () => { UI.init(); Onyx.init(); };
+</script>
+</body>
+</html>
