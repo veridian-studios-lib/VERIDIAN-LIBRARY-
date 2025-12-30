@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Veridian Archive | Infinite Sanctuary</title>
+    <title>Veridian Archive | Sensory Sanctuary</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Fauna+One&display=swap" rel="stylesheet">
     <style>
@@ -20,8 +20,11 @@
         .hidden-view { display: none !important; }
         .oak-bg { background-color: var(--oak-log); }
 
+        /* Perspective for 3D Effects */
+        .perspective-2000 { perspective: 2000px; }
+
         /* The Scrolling Library */
-        #library-screen { overflow-y: auto; height: 100vh; }
+        #library-screen { overflow-y: auto; height: 100vh; padding-bottom: 100px; }
 
         /* Book Styling */
         .book-card {
@@ -29,9 +32,9 @@
             box-shadow: 20px 20px 50px rgba(0,0,0,0.5); border-radius: 0 8px 8px 0;
             transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .book-card:hover { transform: translateY(-15px); border-left-color: var(--gold-wisdom); }
+        .book-card:hover { transform: translateY(-15px) rotateY(-5deg); border-left-color: var(--gold-wisdom); }
 
-        /* Luxurious Reader UI */
+        /* Luxurious Reader UI Overlay */
         #reader-overlay {
             position: fixed; inset: 0; background: var(--oak-log);
             z-index: 1000; display: flex; flex-direction: column;
@@ -39,33 +42,44 @@
         }
         #reader-overlay.active { transform: translateY(0); }
 
+        /* The Physical Book Spread */
+        #physical-book {
+            transition: transform 0.6s ease;
+            transform-style: preserve-3d;
+        }
+
         /* Chunky Nav Hub */
         .hub-btn {
-            width: 60px; height: 60px; background: var(--gold-wisdom);
+            width: 65px; height: 65px; background: var(--gold-wisdom);
             color: var(--oak-log); border-radius: 50%; box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-            display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
+            display: flex; align-items: center; justify-content: center; font-size: 2rem;
+            transition: all 0.5s ease;
         }
+
+        .sentence { transition: all 0.5s ease; border-radius: 4px; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body>
 
     <div id="quote-screen" class="flex flex-col items-center justify-center h-screen px-10 text-center cursor-pointer" onclick="transitionToLibrary()">
-        <p class="text-[#E2DFD2] text-2xl md:text-3xl italic leading-relaxed max-w-3xl mb-8">
-            "A reader lives a thousand lives before he dies..."
+        <p class="text-[#E2DFD2] text-2xl md:text-3xl italic leading-relaxed max-w-3xl mb-12">
+            "A reader lives a thousand lives before he dies...<br>
+            <span class="text-[#D4AF37] not-italic mt-6 block text-xl tracking-[0.2em]">The sanctuary of wisdom awaits.</span>"
         </p>
-        <span class="text-[#D4AF37] text-xs tracking-[0.5em] uppercase opacity-40 animate-pulse">Enter Archive</span>
+        <span class="text-[#D4AF37] text-xs tracking-[0.5em] uppercase opacity-40 animate-pulse">Touch to enter</span>
     </div>
 
-    <div id="library-screen" class="hidden-view p-8 md:p-20 oak-bg">
+    <div id="library-screen" class="hidden-view p-8 md:p-20 oak-bg no-scrollbar">
         <header class="flex flex-col items-center mb-20">
             <h1 class="lux-serif text-3xl md:text-5xl mb-12 text-[#D4AF37]">VERIDIAN ARCHIVE</h1>
-            <input type="text" placeholder="Search Wisdom..." class="bg-transparent border-b border-[#D4AF37]/30 py-3 w-full max-w-md text-center focus:outline-none text-xl italic">
+            <input type="text" placeholder="Search Wisdom..." class="bg-transparent border-b border-[#D4AF37]/30 py-4 w-full max-w-md text-center focus:outline-none text-xl italic text-[#D4AF37] placeholder-[#D4AF37]/30">
         </header>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-16 px-10 pb-40">
-            <div onclick="openReader('Volume I')" class="book-card h-[350px] flex flex-col justify-between p-10 cursor-pointer">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-16 px-10">
+            <div onclick="openReader('Volume I: The Foundation')" class="book-card h-[350px] flex flex-col justify-between p-10 cursor-pointer">
                 <div class="h-[2px] w-12 bg-[#2D4236]/30"></div>
-                <span class="lux-serif text-xs text-[#2B1D12] font-bold">Volume I<br>The Foundation</span>
+                <span class="lux-serif text-xs text-[#2B1D12] font-bold uppercase">Volume I<br>The Foundation</span>
             </div>
             </div>
 
@@ -74,48 +88,126 @@
                 <button class="w-14 h-14 rounded-full bg-[#D4AF37] text-black text-[10px] font-bold shadow-2xl">UPLOAD</button>
                 <button class="w-14 h-14 rounded-full bg-[#2D4236] text-[#D4AF37] text-[10px] font-bold shadow-2xl">SOCIAL</button>
             </div>
-            <button onclick="toggleMenu()" class="hub-btn">+</button>
+            <button onclick="toggleMenu()" class="hub-btn" id="main-hub-btn">+</button>
         </div>
     </div>
 
     <div id="reader-overlay">
-        <div class="p-6 flex justify-between items-center border-b border-[#D4AF37]/10">
+        <div class="p-6 flex justify-between items-center border-b border-[#D4AF37]/10 bg-[#1F150D]">
             <button onclick="closeReader()" class="text-[#D4AF37] lux-serif text-sm">← Library View</button>
-            <span id="reader-title" class="lux-serif text-sm">Now Reading</span>
+            <span id="reader-title" class="lux-serif text-sm text-[#D4AF37]">Now Reading</span>
             <div class="w-10"></div>
         </div>
-        <div class="flex-1 flex flex-col items-center justify-center p-10 text-center">
-            <div class="w-full max-w-2xl bg-[#F3F0E6] h-[70vh] rounded-lg shadow-2xl p-12 text-[#1F150D] overflow-y-auto">
-                <p class="text-xl leading-loose italic">Initializing the sanctuary for your chosen volume...</p>
+
+        <div class="flex-1 flex items-center justify-center p-4 md:p-10 perspective-2000">
+            <div id="physical-book" class="relative w-full max-w-2xl h-[65vh] bg-[#F3F0E6] rounded-r-lg shadow-[30px_0_60px_rgba(0,0,0,0.6)] overflow-hidden">
+                <div class="absolute left-0 top-0 bottom-0 w-10 bg-gradient-to-r from-black/20 to-transparent z-10"></div>
+                
+                <div class="p-12 md:p-16 h-full overflow-y-auto no-scrollbar">
+                    <div id="reading-content" class="text-[#1F150D] text-xl md:text-2xl leading-relaxed italic text-justify">
+                        </div>
+                </div>
             </div>
         </div>
-        <div class="p-10 flex justify-center gap-8">
-            <button class="w-12 h-12 border border-[#D4AF37]/40 rounded-full text-[#D4AF37]">⏪</button>
-            <button class="w-16 h-16 border-2 border-[#D4AF37] rounded-full text-[#D4AF37]">▶️</button>
-            <button class="w-12 h-12 border border-[#D4AF37]/40 rounded-full text-[#D4AF37]">🔊</button>
-            <button class="w-12 h-12 border border-[#D4AF37]/40 rounded-full text-[#D4AF37]">⏩</button>
+
+        <div class="p-8 bg-[#1F150D] flex flex-col items-center gap-4">
+            <div class="flex items-center gap-10">
+                <button onclick="prevSentence()" class="text-[#D4AF37] text-2xl opacity-60 hover:opacity-100">⏪</button>
+                <button id="play-btn" onclick="toggleNarration()" class="w-16 h-16 border-2 border-[#D4AF37] rounded-full flex items-center justify-center text-[#D4AF37] text-2xl">▶️</button>
+                <button onclick="nextSentence()" class="text-[#D4AF37] text-2xl opacity-60 hover:opacity-100">⏩</button>
+            </div>
+            <span class="text-[9px] tracking-[0.4em] text-[#D4AF37]/40 uppercase">Grave Elegance Narrator</span>
         </div>
     </div>
 
     <script>
+        let synth = window.speechSynthesis;
+        let isReading = false;
+        let currentLine = 0;
+
+        function transitionToLibrary() {
+            document.getElementById('quote-screen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('quote-screen').style.display = 'none';
+                document.body.classList.add('oak-bg');
+                document.getElementById('library-screen').classList.remove('hidden-view');
+            }, 1000);
+        }
+
         function toggleMenu() {
             const m = document.getElementById('menu-options');
+            const b = document.getElementById('main-hub-btn');
             m.classList.toggle('opacity-0');
             m.classList.toggle('translate-y-10');
             m.classList.toggle('pointer-events-none');
+            b.style.transform = m.classList.contains('opacity-0') ? "rotate(0deg)" : "rotate(45deg)";
         }
-        function transitionToLibrary() {
-            document.getElementById('quote-screen').style.display = 'none';
-            document.body.classList.add('oak-bg');
-            document.getElementById('library-screen').classList.remove('hidden-view');
-        }
+
         function openReader(title) {
             document.getElementById('reader-title').innerText = title;
             document.getElementById('reader-overlay').classList.add('active');
+            loadText();
         }
+
         function closeReader() {
+            synth.cancel();
+            isReading = false;
+            document.getElementById('play-btn').innerText = "▶️";
             document.getElementById('reader-overlay').classList.remove('active');
         }
+
+        function loadText() {
+            const text = "A reader lives a thousand lives before he dies. The man who never reads lives only one. Welcome to the Veridian Archive. Here, wisdom is eternal, and the air smells of old oak and golden ink. Let the journey begin.";
+            const container = document.getElementById('reading-content');
+            container.innerHTML = text.split('. ').map(s => `<span class="sentence">${s}. </span>`).join('');
+        }
+
+        function toggleNarration() {
+            if (isReading) {
+                synth.cancel();
+                document.getElementById('play-btn').innerText = "▶️";
+            } else {
+                document.getElementById('play-btn').innerText = "⏸";
+                playSentence(currentLine);
+                triggerFlip();
+            }
+            isReading = !isReading;
+        }
+
+        function playSentence(index) {
+            const sentences = document.querySelectorAll('.sentence');
+            if (index >= sentences.length) {
+                isReading = false;
+                document.getElementById('play-btn').innerText = "▶️";
+                return;
+            }
+
+            sentences.forEach(s => { s.style.color = "#1F150D"; s.style.background = "transparent"; });
+            sentences[index].style.color = "#1B3022";
+            sentences[index].style.background = "rgba(212, 175, 55, 0.2)";
+
+            let utterance = new SpeechSynthesisUtterance(sentences[index].innerText);
+            utterance.pitch = 0.7; // Grave voice
+            utterance.rate = 0.8;  // Elegant speed
+            
+            utterance.onend = () => {
+                if (isReading && currentLine < sentences.length - 1) {
+                    currentLine++;
+                    playSentence(currentLine);
+                }
+            };
+            synth.speak(utterance);
+        }
+
+        function triggerFlip() {
+            const book = document.getElementById('physical-book');
+            book.style.transform = "rotateY(-5deg) scale(1.02)";
+            setTimeout(() => { book.style.transform = "rotateY(0deg) scale(1)"; }, 500);
+            // Audio context for crispy sound can be added here
+        }
+
+        function nextSentence() { synth.cancel(); currentLine++; playSentence(currentLine); }
+        function prevSentence() { synth.cancel(); currentLine = Math.max(0, currentLine - 1); playSentence(currentLine); }
     </script>
 </body>
 </html>
