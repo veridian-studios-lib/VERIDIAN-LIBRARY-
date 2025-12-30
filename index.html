@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veridian Archive | Infinite Sanctuary</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Fauna+One&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --oak-log: #1F150D; --gold-wisdom: #D4AF37;
+            --veridian-forest: #2D4236; --paper: #F3F0E6;
+        }
+        body { 
+            font-family: 'Fauna One', serif; background-color: #1A1A1B; 
+            color: var(--gold-wisdom); transition: background-color 2.5s ease;
+            margin: 0; overflow-x: hidden; 
+        }
+        .lux-serif { font-family: 'Cinzel', serif; letter-spacing: 0.2em; }
+        .hidden-view { display: none !important; }
+        .oak-bg { background-color: var(--oak-log); }
+
+        /* The Scrolling Library */
+        #library-screen { overflow-y: auto; height: 100vh; }
+
+        /* Book Styling */
+        .book-card {
+            background-color: var(--paper); border-left: 10px solid var(--veridian-forest);
+            box-shadow: 20px 20px 50px rgba(0,0,0,0.5); border-radius: 0 8px 8px 0;
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .book-card:hover { transform: translateY(-15px); border-left-color: var(--gold-wisdom); }
+
+        /* Luxurious Reader UI */
+        #reader-overlay {
+            position: fixed; inset: 0; background: var(--oak-log);
+            z-index: 1000; display: flex; flex-direction: column;
+            transform: translateY(100%); transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        #reader-overlay.active { transform: translateY(0); }
+
+        /* Chunky Nav Hub */
+        .hub-btn {
+            width: 60px; height: 60px; background: var(--gold-wisdom);
+            color: var(--oak-log); border-radius: 50%; box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="quote-screen" class="flex flex-col items-center justify-center h-screen px-10 text-center cursor-pointer" onclick="transitionToLibrary()">
+        <p class="text-[#E2DFD2] text-2xl md:text-3xl italic leading-relaxed max-w-3xl mb-8">
+            "A reader lives a thousand lives before he dies..."
+        </p>
+        <span class="text-[#D4AF37] text-xs tracking-[0.5em] uppercase opacity-40 animate-pulse">Enter Archive</span>
+    </div>
+
+    <div id="library-screen" class="hidden-view p-8 md:p-20 oak-bg">
+        <header class="flex flex-col items-center mb-20">
+            <h1 class="lux-serif text-3xl md:text-5xl mb-12 text-[#D4AF37]">VERIDIAN ARCHIVE</h1>
+            <input type="text" placeholder="Search Wisdom..." class="bg-transparent border-b border-[#D4AF37]/30 py-3 w-full max-w-md text-center focus:outline-none text-xl italic">
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-16 px-10 pb-40">
+            <div onclick="openReader('Volume I')" class="book-card h-[350px] flex flex-col justify-between p-10 cursor-pointer">
+                <div class="h-[2px] w-12 bg-[#2D4236]/30"></div>
+                <span class="lux-serif text-xs text-[#2B1D12] font-bold">Volume I<br>The Foundation</span>
+            </div>
+            </div>
+
+        <div class="fixed bottom-10 left-10 z-[1001]">
+            <div id="menu-options" class="absolute bottom-20 left-0 flex flex-col gap-4 opacity-0 transition-all translate-y-10 pointer-events-none">
+                <button class="w-14 h-14 rounded-full bg-[#D4AF37] text-black text-[10px] font-bold shadow-2xl">UPLOAD</button>
+                <button class="w-14 h-14 rounded-full bg-[#2D4236] text-[#D4AF37] text-[10px] font-bold shadow-2xl">SOCIAL</button>
+            </div>
+            <button onclick="toggleMenu()" class="hub-btn">+</button>
+        </div>
+    </div>
+
+    <div id="reader-overlay">
+        <div class="p-6 flex justify-between items-center border-b border-[#D4AF37]/10">
+            <button onclick="closeReader()" class="text-[#D4AF37] lux-serif text-sm">← Library View</button>
+            <span id="reader-title" class="lux-serif text-sm">Now Reading</span>
+            <div class="w-10"></div>
+        </div>
+        <div class="flex-1 flex flex-col items-center justify-center p-10 text-center">
+            <div class="w-full max-w-2xl bg-[#F3F0E6] h-[70vh] rounded-lg shadow-2xl p-12 text-[#1F150D] overflow-y-auto">
+                <p class="text-xl leading-loose italic">Initializing the sanctuary for your chosen volume...</p>
+            </div>
+        </div>
+        <div class="p-10 flex justify-center gap-8">
+            <button class="w-12 h-12 border border-[#D4AF37]/40 rounded-full text-[#D4AF37]">⏪</button>
+            <button class="w-16 h-16 border-2 border-[#D4AF37] rounded-full text-[#D4AF37]">▶️</button>
+            <button class="w-12 h-12 border border-[#D4AF37]/40 rounded-full text-[#D4AF37]">🔊</button>
+            <button class="w-12 h-12 border border-[#D4AF37]/40 rounded-full text-[#D4AF37]">⏩</button>
+        </div>
+    </div>
+
+    <script>
+        function toggleMenu() {
+            const m = document.getElementById('menu-options');
+            m.classList.toggle('opacity-0');
+            m.classList.toggle('translate-y-10');
+            m.classList.toggle('pointer-events-none');
+        }
+        function transitionToLibrary() {
+            document.getElementById('quote-screen').style.display = 'none';
+            document.body.classList.add('oak-bg');
+            document.getElementById('library-screen').classList.remove('hidden-view');
+        }
+        function openReader(title) {
+            document.getElementById('reader-title').innerText = title;
+            document.getElementById('reader-overlay').classList.add('active');
+        }
+        function closeReader() {
+            document.getElementById('reader-overlay').classList.remove('active');
+        }
+    </script>
+</body>
+</html>
