@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veridian Archive | Grounded Luxury</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Fauna+One&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --oak-log: #1F150D;
+            --gold-wisdom: #D4AF37;
+            --veridian-forest: #2D4236;
+            --paper: #F3F0E6;
+        }
+        body { 
+            font-family: 'Fauna One', serif; 
+            background-color: #1A1A1B; 
+            color: var(--gold-wisdom);
+            transition: background-color 2.5s ease;
+            margin: 0;
+            overflow: hidden;
+        }
+        .lux-serif { font-family: 'Cinzel', serif; letter-spacing: 0.3em; }
+        .hidden-view { display: none !important; opacity: 0; }
+        .fade-in { animation: fadeIn 2.5s forwards; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* The Oak Library Background */
+        .oak-bg { background-color: var(--oak-log); }
+
+        /* Book Styling: Natureous & Luxurious */
+        .book-card {
+            background-color: var(--paper);
+            border-left: 10px solid var(--veridian-forest);
+            box-shadow: 20px 20px 50px rgba(0,0,0,0.5);
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            border-radius: 0 8px 8px 0;
+        }
+        .book-card:hover {
+            transform: translateY(-20px) scale(1.05);
+            border-left-color: var(--gold-wisdom);
+            box-shadow: 0px 25px 60px rgba(212, 175, 55, 0.15);
+        }
+
+        /* Chunky Floating Button */
+        .chunky-button {
+            width: 70px;
+            height: 70px;
+            background: var(--gold-wisdom);
+            color: var(--oak-log);
+            border-radius: 50%;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            transition: all 0.5s ease;
+            z-index: 100;
+        }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="quote-screen" class="flex flex-col items-center justify-center h-screen px-10 text-center cursor-pointer" onclick="transitionToLibrary()">
+        <p class="text-[#E2DFD2] text-2xl md:text-4xl italic font-light leading-relaxed max-w-3xl mb-12 fade-in">
+            "A reader lives a thousand lives before he dies...<br>
+            <span class="text-[#D4AF37] not-italic mt-6 block text-xl tracking-[0.2em]">The sanctuary of wisdom awaits.</span>"
+        </p>
+        <span class="text-[#D4AF37] text-xs tracking-[0.5em] uppercase opacity-40 animate-pulse">Touch to enter</span>
+    </div>
+
+    <div id="library-screen" class="hidden-view min-h-screen flex flex-col p-8 md:p-20 oak-bg">
+        <header class="flex flex-col items-center mb-24">
+            <h1 class="lux-serif text-3xl md:text-5xl mb-16 text-[#D4AF37]">VERIDIAN ARCHIVE</h1>
+            <div class="w-full max-w-lg">
+                <input type="text" placeholder="Search Wisdom..." 
+                    class="w-full bg-transparent border-b border-[#D4AF37]/30 py-4 px-2 focus:outline-none focus:border-[#D4AF37] transition-all italic text-[#D4AF37] text-center text-2xl placeholder-[#D4AF37]/40">
+            </div>
+        </header>
+
+        <section class="flex gap-16 overflow-x-auto pb-32 px-10 no-scrollbar">
+            <div onclick="enterReaderMode()" class="book-card min-w-[250px] h-[350px] flex flex-col justify-between p-10 cursor-pointer">
+                <div class="h-[2px] w-12 bg-[#2D4236]/40"></div>
+                <span class="lux-serif text-[12px] text-[#2B1D12] font-bold">Volume I<br>First Principles</span>
+            </div>
+            </section>
+
+        <div id="nav-hub" class="fixed bottom-10 left-10 z-50">
+            <div id="menu-options" class="absolute bottom-20 left-0 flex flex-col gap-4 opacity-0 transition-all duration-500 translate-y-10 pointer-events-none">
+                <button title="Upload" class="w-14 h-14 rounded-full bg-[#D4AF37] text-[#1F150D] shadow-xl flex items-center justify-center font-bold hover:scale-110 transition-transform">UP</button>
+                <button title="Socials" class="w-14 h-14 rounded-full bg-[#2D4236] text-[#D4AF37] shadow-xl flex items-center justify-center font-bold hover:scale-110 transition-transform">SOC</button>
+                <button title="About" class="w-14 h-14 rounded-full bg-[#2D4236] text-[#D4AF37] shadow-xl flex items-center justify-center font-bold hover:scale-110 transition-transform">?</button>
+            </div>
+            <button onclick="toggleMenu()" class="chunky-button">
+                <span id="hub-icon" class="transition-transform duration-500 inline-block">+</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let menuOpen = false;
+
+        function toggleMenu() {
+            const options = document.getElementById('menu-options');
+            const icon = document.getElementById('hub-icon');
+            menuOpen = !menuOpen;
+            
+            if(menuOpen) {
+                options.classList.remove('opacity-0', 'translate-y-10', 'pointer-events-none');
+                icon.style.transform = "rotate(45deg)";
+            } else {
+                options.classList.add('opacity-0', 'translate-y-10', 'pointer-events-none');
+                icon.style.transform = "rotate(0deg)";
+            }
+        }
+
+        function transitionToLibrary() {
+            const quote = document.getElementById('quote-screen');
+            const library = document.getElementById('library-screen');
+            quote.style.opacity = "0";
+            quote.style.transition = "opacity 1.5s ease";
+            setTimeout(() => {
+                quote.classList.add('hidden-view');
+                document.body.classList.add('oak-bg');
+                library.classList.remove('hidden-view');
+                library.classList.add('fade-in');
+            }, 1200);
+        }
+
+        function enterReaderMode() {
+            alert("Entering Reader Mode: Initializing 3D Paper Physics and Voice Narration...");
+            // This is where we will hook up the Reader Page next
+        }
+    </script>
+</body>
+</html>
