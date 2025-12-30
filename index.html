@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Veridian Archive | Sensory Sanctuary</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Veridian Archive | Final Sanctuary</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Fauna+One&display=swap" rel="stylesheet">
     <style>
@@ -14,200 +14,194 @@
         body { 
             font-family: 'Fauna One', serif; background-color: #1A1A1B; 
             color: var(--gold-wisdom); transition: background-color 2.5s ease;
-            margin: 0; overflow-x: hidden; 
+            margin: 0; overflow: hidden; touch-action: manipulation;
         }
         .lux-serif { font-family: 'Cinzel', serif; letter-spacing: 0.2em; }
         .hidden-view { display: none !important; }
         .oak-bg { background-color: var(--oak-log); }
 
         /* Perspective for 3D Effects */
-        .perspective-2000 { perspective: 2000px; }
-
-        /* The Scrolling Library */
-        #library-screen { overflow-y: auto; height: 100vh; padding-bottom: 100px; }
+        .perspective-container { perspective: 2000px; height: 100%; display: flex; align-items: center; justify-content: center; }
 
         /* Book Styling */
-        .book-card {
-            background-color: var(--paper); border-left: 10px solid var(--veridian-forest);
-            box-shadow: 20px 20px 50px rgba(0,0,0,0.5); border-radius: 0 8px 8px 0;
-            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        #physical-book {
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            transform-style: preserve-3d;
+            box-shadow: 20px 20px 60px rgba(0,0,0,0.7);
         }
-        .book-card:hover { transform: translateY(-15px) rotateY(-5deg); border-left-color: var(--gold-wisdom); }
 
-        /* Luxurious Reader UI Overlay */
+        /* The Flipping Animation Class */
+        .page-flip { transform: rotateY(-15deg) scale(1.05) translateX(10px); }
+
+        /* Reader Overlay Fix for Mobile */
         #reader-overlay {
             position: fixed; inset: 0; background: var(--oak-log);
             z-index: 1000; display: flex; flex-direction: column;
-            transform: translateY(100%); transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: translateY(100%); transition: transform 0.6s ease-in-out;
         }
         #reader-overlay.active { transform: translateY(0); }
 
-        /* The Physical Book Spread */
-        #physical-book {
-            transition: transform 0.6s ease;
-            transform-style: preserve-3d;
-        }
-
-        /* Chunky Nav Hub */
+        /* Hub Button */
         .hub-btn {
-            width: 65px; height: 65px; background: var(--gold-wisdom);
-            color: var(--oak-log); border-radius: 50%; box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-            display: flex; align-items: center; justify-content: center; font-size: 2rem;
-            transition: all 0.5s ease;
+            width: 60px; height: 60px; background: var(--gold-wisdom);
+            color: var(--oak-log); border-radius: 50%; display: flex;
+            align-items: center; justify-content: center; font-size: 2rem;
         }
 
-        .sentence { transition: all 0.5s ease; border-radius: 4px; }
+        .sentence-active { background: rgba(212, 175, 55, 0.2); color: #1B3022; border-radius: 4px; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body>
 
     <div id="quote-screen" class="flex flex-col items-center justify-center h-screen px-10 text-center cursor-pointer" onclick="transitionToLibrary()">
-        <p class="text-[#E2DFD2] text-2xl md:text-3xl italic leading-relaxed max-w-3xl mb-12">
-            "A reader lives a thousand lives before he dies...<br>
-            <span class="text-[#D4AF37] not-italic mt-6 block text-xl tracking-[0.2em]">The sanctuary of wisdom awaits.</span>"
+        <p class="text-[#E2DFD2] text-2xl italic leading-relaxed max-w-3xl mb-8">
+            "A reader lives a thousand lives before he dies..."
         </p>
-        <span class="text-[#D4AF37] text-xs tracking-[0.5em] uppercase opacity-40 animate-pulse">Touch to enter</span>
+        <span class="text-[#D4AF37] text-xs tracking-[0.4em] opacity-50">TAP TO ENTER</span>
     </div>
 
-    <div id="library-screen" class="hidden-view p-8 md:p-20 oak-bg no-scrollbar">
-        <header class="flex flex-col items-center mb-20">
-            <h1 class="lux-serif text-3xl md:text-5xl mb-12 text-[#D4AF37]">VERIDIAN ARCHIVE</h1>
-            <input type="text" placeholder="Search Wisdom..." class="bg-transparent border-b border-[#D4AF37]/30 py-4 w-full max-w-md text-center focus:outline-none text-xl italic text-[#D4AF37] placeholder-[#D4AF37]/30">
+    <div id="library-screen" class="hidden-view h-screen overflow-y-auto p-6 md:p-20 oak-bg no-scrollbar">
+        <header class="text-center mb-16 pt-10">
+            <h1 class="lux-serif text-3xl mb-10 text-[#D4AF37]">VERIDIAN ARCHIVE</h1>
+            <input type="text" placeholder="Search Wisdom..." class="bg-transparent border-b border-[#D4AF37]/30 py-2 w-full max-w-xs text-center focus:outline-none text-[#D4AF37]">
         </header>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-16 px-10">
-            <div onclick="openReader('Volume I: The Foundation')" class="book-card h-[350px] flex flex-col justify-between p-10 cursor-pointer">
-                <div class="h-[2px] w-12 bg-[#2D4236]/30"></div>
-                <span class="lux-serif text-xs text-[#2B1D12] font-bold uppercase">Volume I<br>The Foundation</span>
+        <div class="grid grid-cols-1 gap-12 pb-32">
+            <div onclick="openReader('Volume I')" class="h-64 bg-[#F3F0E6] rounded-r-lg border-l-[12px] border-[#2D4236] p-8 flex flex-col justify-between shadow-2xl">
+                <div class="h-1 w-8 bg-[#2D4236]/30"></div>
+                <span class="lux-serif text-black font-bold">Volume I<br>The Foundation</span>
             </div>
-            </div>
+        </div>
 
         <div class="fixed bottom-10 left-10 z-[1001]">
             <div id="menu-options" class="absolute bottom-20 left-0 flex flex-col gap-4 opacity-0 transition-all translate-y-10 pointer-events-none">
-                <button class="w-14 h-14 rounded-full bg-[#D4AF37] text-black text-[10px] font-bold shadow-2xl">UPLOAD</button>
-                <button class="w-14 h-14 rounded-full bg-[#2D4236] text-[#D4AF37] text-[10px] font-bold shadow-2xl">SOCIAL</button>
+                <button class="w-14 h-14 rounded-full bg-[#D4AF37] text-black text-[9px] font-bold shadow-2xl">UPLOAD</button>
+                <button class="w-14 h-14 rounded-full bg-[#2D4236] text-[#D4AF37] text-[9px] font-bold shadow-2xl">SOCIAL</button>
             </div>
-            <button onclick="toggleMenu()" class="hub-btn" id="main-hub-btn">+</button>
+            <button onclick="toggleMenu()" class="hub-btn">+</button>
         </div>
     </div>
 
     <div id="reader-overlay">
-        <div class="p-6 flex justify-between items-center border-b border-[#D4AF37]/10 bg-[#1F150D]">
-            <button onclick="closeReader()" class="text-[#D4AF37] lux-serif text-sm">← Library View</button>
-            <span id="reader-title" class="lux-serif text-sm text-[#D4AF37]">Now Reading</span>
-            <div class="w-10"></div>
+        <div class="h-16 flex items-center px-6 border-b border-[#D4AF37]/10">
+            <button onclick="closeReader()" class="text-[#D4AF37] text-sm">← BACK</button>
+            <span id="rtitle" class="flex-1 text-center text-[#D4AF37] text-xs tracking-widest">VOLUME I</span>
         </div>
 
-        <div class="flex-1 flex items-center justify-center p-4 md:p-10 perspective-2000">
-            <div id="physical-book" class="relative w-full max-w-2xl h-[65vh] bg-[#F3F0E6] rounded-r-lg shadow-[30px_0_60px_rgba(0,0,0,0.6)] overflow-hidden">
-                <div class="absolute left-0 top-0 bottom-0 w-10 bg-gradient-to-r from-black/20 to-transparent z-10"></div>
-                
-                <div class="p-12 md:p-16 h-full overflow-y-auto no-scrollbar">
-                    <div id="reading-content" class="text-[#1F150D] text-xl md:text-2xl leading-relaxed italic text-justify">
-                        </div>
-                </div>
+        <div class="flex-1 overflow-hidden perspective-container">
+            <div id="physical-book" class="w-11/12 h-[55vh] bg-[#F3F0E6] rounded-r-lg p-8 md:p-12 overflow-y-auto relative no-scrollbar">
+                <div class="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-black/10 to-transparent"></div>
+                <div id="rcontent" class="text-[#1F150D] text-xl leading-relaxed italic text-justify">
+                    </div>
             </div>
         </div>
 
-        <div class="p-8 bg-[#1F150D] flex flex-col items-center gap-4">
+        <div class="h-32 bg-[#1F150D] flex flex-col items-center justify-center gap-4 pb-6">
             <div class="flex items-center gap-10">
-                <button onclick="prevSentence()" class="text-[#D4AF37] text-2xl opacity-60 hover:opacity-100">⏪</button>
-                <button id="play-btn" onclick="toggleNarration()" class="w-16 h-16 border-2 border-[#D4AF37] rounded-full flex items-center justify-center text-[#D4AF37] text-2xl">▶️</button>
-                <button onclick="nextSentence()" class="text-[#D4AF37] text-2xl opacity-60 hover:opacity-100">⏩</button>
+                <button onclick="changeLine(-1)" class="text-3xl">⏪</button>
+                <button id="pbtn" onclick="togglePlay()" class="w-14 h-14 border-2 border-[#D4AF37] rounded-full text-2xl flex items-center justify-center">▶️</button>
+                <button onclick="changeLine(1)" class="text-3xl">⏩</button>
             </div>
-            <span class="text-[9px] tracking-[0.4em] text-[#D4AF37]/40 uppercase">Grave Elegance Narrator</span>
+            <span class="text-[8px] tracking-[0.4em] opacity-40 uppercase">Grave Elegance Narrator</span>
         </div>
     </div>
 
     <script>
-        let synth = window.speechSynthesis;
-        let isReading = false;
-        let currentLine = 0;
+        const synth = window.speechSynthesis;
+        let isPlaying = false;
+        let lineIdx = 0;
+        let sentences = [];
 
         function transitionToLibrary() {
-            document.getElementById('quote-screen').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('quote-screen').style.display = 'none';
-                document.body.classList.add('oak-bg');
-                document.getElementById('library-screen').classList.remove('hidden-view');
-            }, 1000);
+            document.getElementById('quote-screen').classList.add('hidden-view');
+            document.getElementById('library-screen').classList.remove('hidden-view');
+            document.body.classList.add('oak-bg');
         }
 
         function toggleMenu() {
             const m = document.getElementById('menu-options');
-            const b = document.getElementById('main-hub-btn');
             m.classList.toggle('opacity-0');
             m.classList.toggle('translate-y-10');
             m.classList.toggle('pointer-events-none');
-            b.style.transform = m.classList.contains('opacity-0') ? "rotate(0deg)" : "rotate(45deg)";
         }
 
-        function openReader(title) {
-            document.getElementById('reader-title').innerText = title;
+        function openReader(t) {
+            document.getElementById('rtitle').innerText = t;
             document.getElementById('reader-overlay').classList.add('active');
-            loadText();
+            const text = "A reader lives a thousand lives before he dies. The man who never reads lives only one. Wisdom is the only treasure that increases when shared. Welcome to the Veridian sanctuary.";
+            sentences = text.split('. ').map(s => `<span>${s}. </span>`);
+            document.getElementById('rcontent').innerHTML = sentences.join('');
+            lineIdx = 0;
         }
 
         function closeReader() {
             synth.cancel();
-            isReading = false;
-            document.getElementById('play-btn').innerText = "▶️";
+            isPlaying = false;
+            document.getElementById('pbtn').innerText = "▶️";
             document.getElementById('reader-overlay').classList.remove('active');
         }
 
-        function loadText() {
-            const text = "A reader lives a thousand lives before he dies. The man who never reads lives only one. Welcome to the Veridian Archive. Here, wisdom is eternal, and the air smells of old oak and golden ink. Let the journey begin.";
-            const container = document.getElementById('reading-content');
-            container.innerHTML = text.split('. ').map(s => `<span class="sentence">${s}. </span>`).join('');
-        }
-
-        function toggleNarration() {
-            if (isReading) {
-                synth.cancel();
-                document.getElementById('play-btn').innerText = "▶️";
-            } else {
-                document.getElementById('play-btn').innerText = "⏸";
-                playSentence(currentLine);
-                triggerFlip();
-            }
-            isReading = !isReading;
-        }
-
-        function playSentence(index) {
-            const sentences = document.querySelectorAll('.sentence');
-            if (index >= sentences.length) {
-                isReading = false;
-                document.getElementById('play-btn').innerText = "▶️";
-                return;
-            }
-
-            sentences.forEach(s => { s.style.color = "#1F150D"; s.style.background = "transparent"; });
-            sentences[index].style.color = "#1B3022";
-            sentences[index].style.background = "rgba(212, 175, 55, 0.2)";
-
-            let utterance = new SpeechSynthesisUtterance(sentences[index].innerText);
-            utterance.pitch = 0.7; // Grave voice
-            utterance.rate = 0.8;  // Elegant speed
-            
-            utterance.onend = () => {
-                if (isReading && currentLine < sentences.length - 1) {
-                    currentLine++;
-                    playSentence(currentLine);
-                }
-            };
-            synth.speak(utterance);
+        function playCrispySound() {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'brown-noise' || 'white-noise'; 
+            gain.gain.setValueAtTime(0.05, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.2);
         }
 
         function triggerFlip() {
             const book = document.getElementById('physical-book');
-            book.style.transform = "rotateY(-5deg) scale(1.02)";
-            setTimeout(() => { book.style.transform = "rotateY(0deg) scale(1)"; }, 500);
-            // Audio context for crispy sound can be added here
+            book.classList.add('page-flip');
+            playCrispySound();
+            setTimeout(() => book.classList.remove('page-flip'), 600);
         }
 
-        function nextSentence() { synth.cancel(); currentLine++; playSentence(currentLine); }
-        function prevSentence() { synth.cancel(); currentLine = Math.max(0, currentLine - 1); playSentence(currentLine); }
+        function togglePlay() {
+            if (isPlaying) {
+                synth.cancel();
+                document.getElementById('pbtn').innerText = "▶️";
+            } else {
+                document.getElementById('pbtn').innerText = "⏸";
+                speak();
+            }
+            isPlaying = !isPlaying;
+        }
+
+        function speak() {
+            if (lineIdx >= sentences.length) {
+                isPlaying = false;
+                document.getElementById('pbtn').innerText = "▶️";
+                return;
+            }
+
+            const el = document.getElementById('rcontent').children[lineIdx];
+            Array.from(el.parentNode.children).forEach(s => s.className = "");
+            el.className = "sentence-active";
+            
+            triggerFlip();
+
+            const utter = new SpeechSynthesisUtterance(el.innerText);
+            utter.pitch = 0.6; // Grave
+            utter.rate = 0.8;  // Elegant
+            utter.onend = () => { if (isPlaying) { lineIdx++; speak(); } };
+            synth.speak(utter);
+        }
+
+        function changeLine(dir) {
+            synth.cancel();
+            lineIdx = Math.max(0, Math.min(sentences.length - 1, lineIdx + dir));
+            if (isPlaying) speak(); else {
+                const el = document.getElementById('rcontent').children[lineIdx];
+                Array.from(el.parentNode.children).forEach(s => s.className = "");
+                el.className = "sentence-active";
+            }
+        }
     </script>
 </body>
 </html>
