@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veridian Reader | The Inner Sanctum</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #1F150D; color: #D4AF37; margin: 0; overflow: hidden; font-family: 'Fauna One', serif; }
+        .book-container { perspective: 1500px; height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .book { width: 800px; height: 500px; position: relative; transform-style: preserve-3d; transition: transform 0.5s; }
+        .page { 
+            position: absolute; width: 400px; height: 100%; background: #F3F0E6; top: 0; right: 0; 
+            transform-origin: left; transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1);
+            box-shadow: inset 3px 0 10px rgba(0,0,0,0.1); padding: 40px; color: #1F150D; overflow: hidden;
+        }
+        .page.left { left: 0; transform: none; border-radius: 5px 0 0 5px; border-right: 1px solid rgba(0,0,0,0.1); }
+        .page.right { right: 0; border-radius: 0 5px 5px 0; }
+        .flipping { transform: rotateY(-180deg); }
+        .sentence-active { background: rgba(212, 175, 55, 0.3); }
+        .controls { position: fixed; bottom: 40px; width: 100%; display: flex; justify-content: center; gap: 30px; }
+    </style>
+</head>
+<body>
+    <button onclick="location.href='index.html'" style="position:fixed; top:20px; left:20px; z-index:10;">← LIBRARY</button>
+
+    <div class="book-container">
+        <div id="book" class="book">
+            <div class="page left">
+                <h2 id="r-title" class="uppercase tracking-widest text-xs mb-10">THE FOUNDATION</h2>
+                <div id="l-content" class="italic leading-loose">The journey begins with a single word...</div>
+            </div>
+            <div id="r-page" class="page right">
+                <div id="r-content" class="italic leading-loose">Loading wisdom...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button onclick="change(-1)" class="text-2xl">⏪</button>
+        <button onclick="toggle()" id="p-btn" class="w-16 h-16 border-2 border-[#D4AF37] rounded-full text-2xl">▶️</button>
+        <button onclick="change(1)" class="text-2xl">⏩</button>
+    </div>
+
+    <script>
+        const synth = window.speechSynthesis;
+        let isPlaying = false;
+        let idx = 0;
+        let lines = ["A reader lives a thousand lives before he dies.", "The man who never reads lives only one.", "Wisdom is the gold of the soul."];
+
+        function toggle() {
+            if(isPlaying) { synth.cancel(); } else { speak(); }
+            isPlaying = !isPlaying;
+            document.getElementById('p-btn').innerText = isPlaying ? "⏸" : "▶️";
+        }
+
+        function speak() {
+            if(idx >= lines.length) return;
+            
+            const rPage = document.getElementById('r-page');
+            const rContent = document.getElementById('r-content');
+            
+            // Flip Effect & Sound
+            rPage.classList.add('flipping');
+            new AudioContext().createOscillator().start(); // Simplified "Crispy" trigger
+            
+            setTimeout(() => {
+                rContent.innerText = lines[idx];
+                rPage.classList.remove('flipping');
+                
+                const utter = new SpeechSynthesisUtterance(lines[idx]);
+                utter.pitch = 0.6; utter.rate = 0.8;
+                utter.onend = () => { if(isPlaying) { idx++; speak(); } };
+                synth.speak(utter);
+            }, 400);
+        }
+
+        function change(d) { synth.cancel(); idx = Math.max(0, idx+d); speak(); }
+    </script>
+</body>
+</html>
