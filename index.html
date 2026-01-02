@@ -3,59 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Veridian Archive | The Grand Library</title>
+    <title>Veridian Archive | The Grand Gallery</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Fauna+One&display=swap" rel="stylesheet">
     <style>
-        :root { --oak: #1F150D; --gold: #D4AF37; --forest: #2D4236; --paper: #F3F0E6; }
-        body { font-family: 'Fauna One', serif; background-color: #1A1A1B; color: var(--gold); margin: 0; overflow-x: hidden; }
-        .lux-serif { font-family: 'Cinzel', serif; letter-spacing: 0.2em; }
-        .oak-bg { background-color: var(--oak); transition: background-color 2s; }
-        .shelf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 40px; padding: 40px; }
-        .book { 
-            background: var(--paper); border-left: 10px solid var(--forest); height: 300px;
-            box-shadow: 15px 15px 40px rgba(0,0,0,0.5); border-radius: 0 5px 5px 0;
-            transition: 0.5s transform; cursor: pointer; display: flex; align-items: flex-end; padding: 20px;
+        :root { --oak: #1A1108; --gold: #D4AF37; --forest: #2D4236; --paper: #F3F0E6; }
+        body { font-family: 'Fauna One', serif; background-color: #0F0A05; color: var(--gold); margin: 0; overflow-x: hidden; }
+        .lux-serif { font-family: 'Cinzel', serif; letter-spacing: 0.3em; }
+        
+        /* The Quote Screen */
+        #quote-screen { transition: opacity 1.5s ease; background: #0F0A05; }
+        
+        /* The Shelf Layout */
+        .shelf { 
+            background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.5)), url('https://www.transparenttextures.com/patterns/wood-pattern.png');
+            background-color: var(--oak);
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 50px;
+            padding: 100px 50px;
         }
-        .book:hover { transform: translateY(-15px); border-left-color: var(--gold); }
-        .chunky-hub { position: fixed; bottom: 30px; left: 30px; width: 60px; height: 60px; background: var(--gold); color: var(--oak); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; z-index: 100; }
-        .menu-bloom { position: absolute; bottom: 80px; left: 0; display: flex; flex-direction: column; gap: 15px; transition: 0.5s; opacity: 0; pointer-events: none; }
-        .menu-bloom.active { opacity: 1; pointer-events: auto; transform: translateY(-10px); }
+
+        .book {
+            height: 320px; background: var(--paper); border-left: 12px solid var(--forest);
+            border-radius: 0 8px 8px 0; box-shadow: 20px 20px 60px rgba(0,0,0,0.8);
+            cursor: pointer; transition: 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex; align-items: flex-end; padding: 25px;
+        }
+        .book:hover { transform: translateY(-20px) rotateY(-10deg); border-left-color: var(--gold); }
+
+        /* The Bloom Hub (Bottom Left) */
+        .hub-btn { width: 70px; height: 70px; background: var(--gold); color: var(--oak); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; position: fixed; bottom: 40px; left: 40px; z-index: 100; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
+        .menu-bloom { position: absolute; bottom: 90px; left: 0; display: flex; flex-direction: column; gap: 20px; transition: 0.5s ease; opacity: 0; pointer-events: none; transform: translateY(20px); }
+        .menu-bloom.active { opacity: 1; pointer-events: auto; transform: translateY(0); }
+        .sub-btn { width: 55px; height: 55px; border-radius: 50%; background: var(--forest); color: var(--gold); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body>
-    <div id="quote" class="h-screen flex flex-col items-center justify-center text-center px-10" onclick="enter()">
-        <p class="text-2xl md:text-3xl italic mb-8">"A reader lives a thousand lives before he dies..."</p>
-        <span class="opacity-40 tracking-[0.5em] text-xs">TOUCH TO ENTER</span>
+
+    <div id="quote-screen" class="fixed inset-0 z-[200] flex flex-col items-center justify-center text-center px-10" onclick="enterArchive()">
+        <p class="text-2xl md:text-4xl italic mb-10 text-[#E2DFD2]">"A reader lives a thousand lives before he dies..."</p>
+        <span class="lux-serif text-xs opacity-40 animate-pulse uppercase">Touch to Step Inside</span>
     </div>
 
-    <div id="library" class="hidden min-h-screen oak-bg p-10">
-        <h1 class="lux-serif text-center text-3xl md:text-5xl my-16">VERIDIAN ARCHIVE</h1>
-        <div class="shelf-grid">
-            <div class="book" onclick="location.href='reader.html?title=Volume I'">
-                <span class="lux-serif text-black text-xs font-bold">VOLUME I<br>THE FOUNDATION</span>
-            </div>
-            <div class="book" onclick="location.href='reader.html?title=Volume II'">
-                <span class="lux-serif text-black text-xs font-bold">VOLUME II<br>NATURE'S ECHO</span>
-            </div>
-        </div>
+    <div id="main-gallery" class="hidden opacity-0 transition-opacity duration-1000">
+        <header class="text-center pt-20 pb-10 bg-[#0F0A05]">
+            <h1 class="lux-serif text-4xl md:text-6xl text-white mb-6">VERIDIAN ARCHIVE</h1>
+            <input type="text" placeholder="Search Wisdom..." class="bg-transparent border-b border-[#D4AF37]/30 py-3 w-64 text-center focus:outline-none text-[#D4AF37] italic text-xl">
+        </header>
 
-        <div class="chunky-hub" onclick="toggleMenu()">
-            <span>+</span>
+        <div class="shelf">
+            <div class="book" onclick="location.href='reader.html'">
+                <span class="lux-serif text-[#1A1108] text-xs font-bold leading-relaxed">VOLUME I<br>THE FOUNDATION</span>
+            </div>
+            </div>
+
+        <div class="hub-btn" onclick="toggleMenu()">
+            <span id="plus">+</span>
             <div id="bloom" class="menu-bloom">
-                <button class="w-12 h-12 rounded-full bg-white text-xs font-bold">UP</button>
-                <button class="w-12 h-12 rounded-full bg-white text-xs font-bold">SOC</button>
+                <button class="sub-btn">UPLOAD</button>
+                <button class="sub-btn">SOCIALS</button>
+                <button class="sub-btn">ORIGIN</button>
             </div>
         </div>
     </div>
 
     <script>
-        function enter() {
-            document.getElementById('quote').style.display='none';
-            document.getElementById('library').style.display='block';
-            document.body.classList.add('oak-bg');
+        function enterArchive() {
+            document.getElementById('quote-screen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('quote-screen').classList.add('hidden');
+                const gallery = document.getElementById('main-gallery');
+                gallery.classList.remove('hidden');
+                setTimeout(() => gallery.classList.add('opacity-100'), 50);
+            }, 1500);
         }
-        function toggleMenu() { document.getElementById('bloom').classList.toggle('active'); }
+        function toggleMenu() {
+            document.getElementById('bloom').classList.toggle('active');
+            document.getElementById('plus').style.transform = document.getElementById('bloom').classList.contains('active') ? "rotate(45deg)" : "rotate(0deg)";
+        }
     </script>
 </body>
 </html>
