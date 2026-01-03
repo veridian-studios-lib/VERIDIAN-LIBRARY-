@@ -2,80 +2,181 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Veridian Reader | The Inner Sanctum</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Veridian Reader | Single Page Sanctuary</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Fauna+One&display=swap" rel="stylesheet">
     <style>
-        body { background: #1F150D; color: #D4AF37; margin: 0; overflow: hidden; font-family: 'Fauna One', serif; }
-        .book-container { perspective: 1500px; height: 100vh; display: flex; align-items: center; justify-content: center; }
-        .book { width: 800px; height: 500px; position: relative; transform-style: preserve-3d; transition: transform 0.5s; }
-        .page { 
-            position: absolute; width: 400px; height: 100%; background: #F3F0E6; top: 0; right: 0; 
-            transform-origin: left; transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1);
-            box-shadow: inset 3px 0 10px rgba(0,0,0,0.1); padding: 40px; color: #1F150D; overflow: hidden;
+        :root { --gold: #D4AF37; --paper: #F3F0E6; --oak: #1A1108; }
+        body { 
+            font-family: 'Fauna One', serif; background-color: #0F0A05; 
+            margin: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; height: 100vh;
         }
-        .page.left { left: 0; transform: none; border-radius: 5px 0 0 5px; border-right: 1px solid rgba(0,0,0,0.1); }
-        .page.right { right: 0; border-radius: 0 5px 5px 0; }
-        .flipping { transform: rotateY(-180deg); }
-        .sentence-active { background: rgba(212, 175, 55, 0.3); }
-        .controls { position: fixed; bottom: 40px; width: 100%; display: flex; justify-content: center; gap: 30px; }
+
+        /* The Viewport Stage */
+        .stage {
+            perspective: 2500px;
+            width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* The Single Page Container */
+        .page-container {
+            position: relative;
+            width: 85vw; max-width: 500px; height: 75vh;
+            transform-style: preserve-3d;
+        }
+
+        /* Luxurious Curved Page */
+        .physical-page {
+            position: absolute;
+            inset: 0;
+            background: var(--paper);
+            border-radius: 15px 40px 40px 15px; /* Deep curved outer corners */
+            padding: 45px;
+            color: #1F150D;
+            box-shadow: 
+                -10px 10px 30px rgba(0,0,0,0.5),
+                inset 10px 0 20px rgba(0,0,0,0.1); /* Spine shadow */
+            transform-origin: left center;
+            transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1), opacity 0.8s ease;
+            display: flex; flex-direction: column; justify-content: center;
+        }
+
+        /* The Luxurious Flip: Lifting, Curving, and Vanishing */
+        .flipped {
+            transform: rotateY(-110deg) translateZ(100px) scale(0.9) skewY(-5deg);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Text Highlighting */
+        .gold-highlight {
+            color: #000;
+            background: linear-gradient(120deg, rgba(212, 175, 55, 0.3) 0%, rgba(212, 175, 55, 0.3) 100%);
+            background-repeat: no-repeat;
+            background-size: 100% 0.4em;
+            background-position: 0 80%;
+            text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+            transition: all 0.6s ease;
+        }
+
+        .content { font-size: 1.4rem; line-height: 2.2; font-style: italic; text-align: justify; }
+
+        /* Minimalist Gold Controls */
+        .nav-controls {
+            position: fixed; bottom: 50px; left: 50%;
+            transform: translateX(-50%);
+            display: flex; align-items: center; gap: 60px;
+            z-index: 100;
+        }
+        .nav-btn { color: var(--gold); font-size: 1.8rem; opacity: 0.4; transition: 0.4s; background: none; border: none; cursor: pointer; }
+        .nav-btn:hover { opacity: 1; transform: scale(1.1); }
+        .play-outer { width: 65px; height: 65px; border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
-    <button onclick="location.href='index.html'" style="position:fixed; top:20px; left:20px; z-index:10;">← LIBRARY</button>
 
-    <div class="book-container">
-        <div id="book" class="book">
-            <div class="page left">
-                <h2 id="r-title" class="uppercase tracking-widest text-xs mb-10">THE FOUNDATION</h2>
-                <div id="l-content" class="italic leading-loose">The journey begins with a single word...</div>
-            </div>
-            <div id="r-page" class="page right">
-                <div id="r-content" class="italic leading-loose">Loading wisdom...</div>
+    <button onclick="location.href='index.html'" class="fixed top-10 left-10 text-[#D4AF37] opacity-30 hover:opacity-100 uppercase text-[10px] tracking-[0.4em] z-50">← Archive</button>
+
+    <div class="stage">
+        <div class="page-container" id="book-stack">
+            <div class="physical-page" id="main-page">
+                <span class="text-[9px] uppercase tracking-[0.4em] opacity-30 mb-8 block">Sanctum Verse</span>
+                <div id="page-content" class="content">
+                    </div>
             </div>
         </div>
     </div>
 
-    <div class="controls">
-        <button onclick="change(-1)" class="text-2xl">⏪</button>
-        <button onclick="toggle()" id="p-btn" class="w-16 h-16 border-2 border-[#D4AF37] rounded-full text-2xl">▶️</button>
-        <button onclick="change(1)" class="text-2xl">⏩</button>
+    <div class="nav-controls">
+        <button onclick="changePage(-1)" class="nav-btn">◁</button>
+        <div class="play-outer">
+            <button onclick="toggleNarrator()" id="play-trigger" class="nav-btn" style="opacity:1">▶</button>
+        </div>
+        <button onclick="changePage(1)" class="nav-btn">▷</button>
     </div>
 
     <script>
-        const synth = window.speechSynthesis;
-        let isPlaying = false;
+        const wisdom = [
+            "A reader lives a thousand lives before he dies. The man who never reads lives only one.",
+            "Wisdom is not a product of schooling, but of the lifelong attempt to acquire it.",
+            "The oak tree does not compete with the reed. It simply grows deep.",
+            "In the silence of the library, the voices of the centuries find their echo.",
+            "The golden path is found within the pages of the heart."
+        ];
+
         let idx = 0;
-        let lines = ["A reader lives a thousand lives before he dies.", "The man who never reads lives only one.", "Wisdom is the gold of the soul."];
+        let isNarrationOn = false;
+        const synth = window.speechSynthesis;
 
-        function toggle() {
-            if(isPlaying) { synth.cancel(); } else { speak(); }
-            isPlaying = !isPlaying;
-            document.getElementById('p-btn').innerText = isPlaying ? "⏸" : "▶️";
+        function loadText() {
+            document.getElementById('page-content').innerHTML = `<span>${wisdom[idx]}</span>`;
         }
 
-        function speak() {
-            if(idx >= lines.length) return;
-            
-            const rPage = document.getElementById('r-page');
-            const rContent = document.getElementById('r-content');
-            
-            // Flip Effect & Sound
-            rPage.classList.add('flipping');
-            new AudioContext().createOscillator().start(); // Simplified "Crispy" trigger
-            
-            setTimeout(() => {
-                rContent.innerText = lines[idx];
-                rPage.classList.remove('flipping');
+        function changePage(dir) {
+            if (dir === 1 && idx < wisdom.length - 1) {
+                const page = document.getElementById('main-page');
                 
-                const utter = new SpeechSynthesisUtterance(lines[idx]);
-                utter.pitch = 0.6; utter.rate = 0.8;
-                utter.onend = () => { if(isPlaying) { idx++; speak(); } };
-                synth.speak(utter);
-            }, 400);
+                // 1. Start satisfying luxurious flip
+                page.classList.add('flipped');
+                playPaperSound();
+
+                setTimeout(() => {
+                    idx++;
+                    loadText();
+                    // 2. Reset page to bottom instantly, then fade in
+                    page.style.transition = 'none';
+                    page.classList.remove('flipped');
+                    page.style.opacity = '0';
+                    page.style.transform = 'scale(0.95)';
+                    
+                    setTimeout(() => {
+                        page.style.transition = 'transform 1.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s ease';
+                        page.style.opacity = '1';
+                        page.style.transform = 'scale(1)';
+                        if(isNarrationOn) speakNow();
+                    }, 50);
+                }, 1000);
+            } else if (dir === -1 && idx > 0) {
+                idx--;
+                loadText();
+                playPaperSound();
+            }
         }
 
-        function change(d) { synth.cancel(); idx = Math.max(0, idx+d); speak(); }
-    </script>
-</body>
-</html>
+        function toggleNarrator() {
+            if (isNarrationOn) {
+                synth.cancel();
+                document.getElementById('play-trigger').innerText = "▶";
+            } else {
+                document.getElementById('play-trigger').innerText = "‖";
+                speakNow();
+            }
+            isNarrationOn = !isNarrationOn;
+        }
+
+        function speakNow() {
+            synth.cancel();
+            const textEl = document.querySelector('#page-content span');
+            textEl.classList.add('gold-highlight');
+
+            const utter = new SpeechSynthesisUtterance(wisdom[idx]);
+            utter.pitch = 0.6; // Grave Elegance
+            utter.rate = 0.8;  // Slow, Luxury Speed
+            
+            utter.onend = () => {
+                textEl.classList.remove('gold-highlight');
+                if (isNarrationOn && idx < wisdom.length - 1) {
+                    setTimeout(() => changePage(1), 1000);
+                }
+            };
+            synth.speak(utter);
+        }
+
+        function playPaperSound() {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = '
+        
