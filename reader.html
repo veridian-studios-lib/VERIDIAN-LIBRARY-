@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Veridian Archive | Gesture Sanctum</title>
+    <title>Veridian Archive | Final Sanctum</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Fauna+One&display=swap" rel="stylesheet">
     <style>
@@ -11,7 +11,14 @@
         body { 
             font-family: 'Fauna One', serif; background: #050505;
             margin: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; height: 100vh;
-            touch-action: none; /* Prevents browser pull-to-refresh during swiping */
+            touch-action: none;
+        }
+
+        /* Interaction Unlocker */
+        #unlock-screen {
+            position: fixed; inset: 0; z-index: 500; background: #050505;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 1s ease;
         }
 
         .lamp-glow {
@@ -32,31 +39,42 @@
             transform-origin: left center;
         }
 
-        .page-ghost {
+        /* Forward Flip Animation */
+        .page-ghost-right {
             position: absolute; inset: 0; background: var(--paper);
             border-radius: 10px 40px 40px 10px; padding: 40px; color: #1F150D;
             transform-origin: left center; z-index: 30; pointer-events: none;
             transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1), opacity 1s;
         }
+        .peel-forward { transform: rotateY(-120deg) skewY(-10deg) translateZ(100px); opacity: 0; }
 
-        .peel-curve {
-            transform: rotateY(-120deg) skewY(-10deg) translateZ(100px);
-            opacity: 0;
+        /* Backward Flip Animation */
+        .page-ghost-left {
+            position: absolute; inset: 0; background: var(--paper);
+            border-radius: 10px 40px 40px 10px; padding: 40px; color: #1F150D;
+            transform-origin: right center; z-index: 30; pointer-events: none;
+            transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1), opacity 1s;
         }
+        .peel-back { transform: rotateY(120deg) skewY(10deg) translateZ(100px); opacity: 0; }
 
         .sentence { transition: background 0.4s ease; padding: 0 4px; border-radius: 4px; }
-        .active-glow { background: rgba(212, 175, 55, 0.35); color: #000; }
+        .active-glow { background: rgba(212, 175, 55, 0.35); color: #000; box-shadow: 0 0 10px rgba(212, 175, 55, 0.2); }
 
-        .content { font-size: 1.2rem; line-height: 2; text-align: justify; user-select: none; }
+        .content { font-size: 1.1rem; line-height: 1.8; text-align: justify; user-select: none; }
 
         .nav-dock {
             position: fixed; bottom: 30px; display: flex; align-items: center; gap: 50px; z-index: 100;
         }
         .btn { color: var(--gold); font-size: 2rem; opacity: 0.5; cursor: pointer; background: none; border: none; }
-        .play-ring { width: 60px; height: 60px; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .play-ring { width: 60px; height: 60px; border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
+
+    <div id="unlock-screen" onclick="startSanctum()">
+        <p class="text-[#D4AF37] italic opacity-40 mb-4">The Archive Awaits</p>
+        <button class="px-8 py-3 border border-[#D4AF37]/30 text-[#D4AF37] uppercase tracking-widest text-xs hover:bg-[#D4AF37] hover:text-black transition-all">Enter Sanctum</button>
+    </div>
 
     <div class="lamp-glow"></div>
 
@@ -84,36 +102,54 @@
         let pIdx = 0; let sIdx = 0; let isPlaying = false;
         const synth = window.speechSynthesis;
         let audioCtx;
-
-        // --- GESTURE LOGIC ---
         let touchStartX = 0;
+
+        function startSanctum() {
+            initAudio();
+            document.getElementById('unlock-screen').style.opacity = '0';
+            setTimeout(() => document.getElementById('unlock-screen').remove(), 1000);
+            render();
+        }
+
+        function initAudio() { 
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        // --- GESTURE & FLIP LOGIC ---
         const mainPage = document.getElementById('main-page');
-
-        mainPage.addEventListener('touchstart', e => {
-            touchStartX = e.changedTouches[0].screenX;
-        }, {passive: true});
-
-        mainPage.addEventListener('touchend', e => {
-            let touchEndX = e.changedTouches[0].screenX;
-            handleSwipe(touchStartX, touchEndX);
-        }, {passive: true});
-
-        // Mouse support for desktop swiping
-        mainPage.addEventListener('mousedown', e => { touchStartX = e.screenX; });
-        mainPage.addEventListener('mouseup', e => { handleSwipe(touchStartX, e.screenX); });
+        mainPage.addEventListener('touchstart', e => touchStartX = e.changedTouches[0].screenX, {passive: true});
+        mainPage.addEventListener('touchend', e => handleSwipe(touchStartX, e.changedTouches[0].screenX), {passive: true});
 
         function handleSwipe(start, end) {
-            const threshold = 50;
-            if (start - end > threshold) changePage(1); // Swipe Left -> Next
-            if (end - start > threshold) changePage(-1); // Swipe Right -> Prev
+            if (start - end > 50) changePage(1);
+            if (end - start > 50) changePage(-1);
         }
-        // ---------------------
 
-        function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+        function changePage(dir) {
+            initAudio();
+            if ((dir === 1 && pIdx < archive.length - 1) || (dir === -1 && pIdx > 0)) {
+                const stage = document.getElementById('book-stage');
+                const ghost = document.createElement('div');
+                
+                // Ghost Logic
+                ghost.className = dir === 1 ? 'page-ghost-right' : 'page-ghost-left';
+                ghost.innerHTML = document.getElementById('main-page').innerHTML;
+                stage.appendChild(ghost);
+
+                // Animation Trigger
+                setTimeout(() => ghost.classList.add(dir === 1 ? 'peel-forward' : 'peel-back'), 10);
+                playSFX();
+
+                pIdx += dir; sIdx = 0; render();
+
+                setTimeout(() => ghost.remove(), 1200);
+                if (isPlaying) speak();
+            }
+        }
 
         function render() {
-            const container = document.getElementById('page-content');
-            container.innerHTML = archive[pIdx].map((text, i) => 
+            document.getElementById('page-content').innerHTML = archive[pIdx].map((text, i) => 
                 `<span id="s-${i}" class="sentence">${text} </span>`
             ).join('');
             updateHighlight();
@@ -125,36 +161,10 @@
             if (current) current.classList.add('active-glow');
         }
 
-        function changePage(dir) {
-            initAudio();
-            if (dir === 1 && pIdx < archive.length - 1) {
-                const stage = document.getElementById('book-stage');
-                const ghost = document.createElement('div');
-                ghost.className = 'page-ghost';
-                ghost.innerHTML = document.getElementById('main-page').innerHTML;
-                stage.appendChild(ghost);
-
-                setTimeout(() => ghost.classList.add('peel-curve'), 10);
-                playSFX();
-
-                pIdx++; sIdx = 0; render();
-
-                setTimeout(() => ghost.remove(), 1200);
-                if (isPlaying) speak();
-            } else if (dir === -1 && pIdx > 0) {
-                pIdx--; sIdx = 0; render(); playSFX();
-            }
-        }
-
         function toggleAudio() {
             initAudio();
-            if (isPlaying) {
-                synth.cancel();
-                document.getElementById('play-btn').innerText = "▶";
-            } else {
-                document.getElementById('play-btn').innerText = "‖";
-                speak();
-            }
+            if (isPlaying) { synth.cancel(); document.getElementById('play-btn').innerText = "▶"; } 
+            else { document.getElementById('play-btn').innerText = "‖"; speak(); }
             isPlaying = !isPlaying;
         }
 
@@ -165,11 +175,9 @@
             const msg = new SpeechSynthesisUtterance(archive[pIdx][sIdx]);
             msg.pitch = 0.6; msg.rate = 0.8;
             msg.onend = () => {
-                if (!isPlaying) return;
-                if (sIdx < archive[pIdx].length - 1) {
-                    sIdx++; setTimeout(speak, 500);
-                } else {
-                    setTimeout(() => changePage(1), 800);
+                if (isPlaying) {
+                    if (sIdx < archive[pIdx].length - 1) { sIdx++; setTimeout(speak, 500); } 
+                    else if (pIdx < archive.length - 1) { setTimeout(() => changePage(1), 800); }
                 }
             };
             synth.speak(msg);
@@ -185,8 +193,6 @@
             osc.connect(g); g.connect(audioCtx.destination);
             osc.start(); osc.stop(audioCtx.currentTime + 0.6);
         }
-
-        render();
     </script>
 </body>
 </html>
