@@ -3,180 +3,212 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Veridian Reader | Single Page Sanctuary</title>
+    <title>Veridian Reader | Illuminated Sanctum</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Fauna+One&display=swap" rel="stylesheet">
     <style>
         :root { --gold: #D4AF37; --paper: #F3F0E6; --oak: #1A1108; }
         body { 
-            font-family: 'Fauna One', serif; background-color: #0F0A05; 
+            font-family: 'Fauna One', serif; 
+            background: #050505;
             margin: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; height: 100vh;
-        }
-
-        /* The Viewport Stage */
-        .stage {
             perspective: 2500px;
-            width: 100%; height: 100%;
-            display: flex; align-items: center; justify-content: center;
         }
 
-        /* The Single Page Container */
-        .page-container {
+        /* The Warm Library Lamp Glow */
+        .lamp-glow {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80vw; height: 80vw;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.05) 40%, transparent 70%);
+            filter: blur(60px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .book-stage {
             position: relative;
-            width: 85vw; max-width: 500px; height: 75vh;
+            width: 85vw; max-width: 450px; height: 65vh;
             transform-style: preserve-3d;
+            z-index: 10;
         }
 
-        /* Luxurious Curved Page */
-        .physical-page {
+        /* The Luxurious Page with Curved Corners */
+        .page-sheet {
             position: absolute;
             inset: 0;
             background: var(--paper);
-            border-radius: 15px 40px 40px 15px; /* Deep curved outer corners */
+            border-radius: 12px 50px 50px 12px;
             padding: 45px;
             color: #1F150D;
             box-shadow: 
-                -10px 10px 30px rgba(0,0,0,0.5),
-                inset 10px 0 20px rgba(0,0,0,0.1); /* Spine shadow */
+                -20px 20px 60px rgba(0,0,0,0.7), 
+                inset 20px 0 40px rgba(0,0,0,0.08);
             transform-origin: left center;
-            transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1), opacity 0.8s ease;
+            transition: transform 1.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.8s ease;
             display: flex; flex-direction: column; justify-content: center;
         }
 
-        /* The Luxurious Flip: Lifting, Curving, and Vanishing */
-        .flipped {
-            transform: rotateY(-110deg) translateZ(100px) scale(0.9) skewY(-5deg);
+        /* Weighted Physical Flip */
+        .page-flip-animation {
+            transform: rotateY(-140deg) translateZ(200px) rotateX(15deg) scale(0.85);
             opacity: 0;
             pointer-events: none;
         }
 
-        /* Text Highlighting */
-        .gold-highlight {
+        /* GOLDEN TEXT ILLUMINATION */
+        .gold-voice-highlight {
             color: #000;
-            background: linear-gradient(120deg, rgba(212, 175, 55, 0.3) 0%, rgba(212, 175, 55, 0.3) 100%);
-            background-repeat: no-repeat;
-            background-size: 100% 0.4em;
-            background-position: 0 80%;
-            text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+            background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.3), transparent);
+            background-size: 200% 100%;
+            animation: shine 2s infinite linear;
+            text-shadow: 0 0 12px rgba(212, 175, 55, 0.6);
+            border-radius: 4px;
+            padding: 2px 8px;
             transition: all 0.6s ease;
         }
 
-        .content { font-size: 1.4rem; line-height: 2.2; font-style: italic; text-align: justify; }
-
-        /* Minimalist Gold Controls */
-        .nav-controls {
-            position: fixed; bottom: 50px; left: 50%;
-            transform: translateX(-50%);
-            display: flex; align-items: center; gap: 60px;
-            z-index: 100;
+        @keyframes shine {
+            0% { background-position: 100% 0; }
+            100% { background-position: -100% 0; }
         }
-        .nav-btn { color: var(--gold); font-size: 1.8rem; opacity: 0.4; transition: 0.4s; background: none; border: none; cursor: pointer; }
-        .nav-btn:hover { opacity: 1; transform: scale(1.1); }
-        .play-outer { width: 65px; height: 65px; border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+
+        .text-body { font-size: 1.4rem; line-height: 2.4; font-style: italic; text-align: justify; }
+
+        /* Navigation Dock */
+        .nav-dock {
+            position: fixed; bottom: 50px; left: 50%; transform: translateX(-50%);
+            display: flex; align-items: center; gap: 60px; z-index: 100;
+        }
+        .icon-btn { color: var(--gold); font-size: 1.8rem; opacity: 0.4; transition: 0.4s; cursor: pointer; background: none; border: none; }
+        .icon-btn:hover { opacity: 1; transform: scale(1.1); }
+        .play-circle { 
+            width: 70px; height: 70px; 
+            border: 1px solid rgba(212, 175, 55, 0.2); 
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+            background: rgba(212, 175, 55, 0.03);
+        }
     </style>
 </head>
 <body>
 
-    <button onclick="location.href='index.html'" class="fixed top-10 left-10 text-[#D4AF37] opacity-30 hover:opacity-100 uppercase text-[10px] tracking-[0.4em] z-50">← Archive</button>
+    <div class="lamp-glow"></div>
 
-    <div class="stage">
-        <div class="page-container" id="book-stack">
-            <div class="physical-page" id="main-page">
-                <span class="text-[9px] uppercase tracking-[0.4em] opacity-30 mb-8 block">Sanctum Verse</span>
-                <div id="page-content" class="content">
-                    </div>
-            </div>
+    <button onclick="location.href='index.html'" class="fixed top-10 left-10 text-[#D4AF37] opacity-30 text-[10px] tracking-[0.4em] z-50">← ARCHIVE</button>
+
+    <div class="book-stage">
+        <div class="page-sheet" id="active-page">
+            <span class="text-[10px] uppercase tracking-[0.5em] opacity-30 mb-12 block text-center">Sanctum Manuscript</span>
+            <div id="content" class="text-body">
+                </div>
         </div>
     </div>
 
-    <div class="nav-controls">
-        <button onclick="changePage(-1)" class="nav-btn">◁</button>
-        <div class="play-outer">
-            <button onclick="toggleNarrator()" id="play-trigger" class="nav-btn" style="opacity:1">▶</button>
+    <div class="nav-dock">
+        <button onclick="flipPage(-1)" class="icon-btn">◁</button>
+        <div class="play-circle">
+            <button onclick="handlePlay()" id="play-btn" class="icon-btn" style="opacity:1">▶</button>
         </div>
-        <button onclick="changePage(1)" class="nav-btn">▷</button>
+        <button onclick="flipPage(1)" class="icon-btn">▷</button>
     </div>
 
     <script>
-        const wisdom = [
+        const archive = [
             "A reader lives a thousand lives before he dies. The man who never reads lives only one.",
-            "Wisdom is not a product of schooling, but of the lifelong attempt to acquire it.",
-            "The oak tree does not compete with the reed. It simply grows deep.",
-            "In the silence of the library, the voices of the centuries find their echo.",
-            "The golden path is found within the pages of the heart."
+            "Wisdom is the gold of the soul, refined by the fire of experience.",
+            "Nature does not hurry, yet everything is accomplished. Stay grounded.",
+            "In the silence of the library, the whispers of the ancients become clear.",
+            "The path is long, but the words of the wise are a lamp unto your feet."
         ];
 
-        let idx = 0;
-        let isNarrationOn = false;
+        let index = 0;
+        let reading = false;
+        let audioCtx;
         const synth = window.speechSynthesis;
 
-        function loadText() {
-            document.getElementById('page-content').innerHTML = `<span>${wisdom[idx]}</span>`;
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
 
-        function changePage(dir) {
-            if (dir === 1 && idx < wisdom.length - 1) {
-                const page = document.getElementById('main-page');
-                
-                // 1. Start satisfying luxurious flip
-                page.classList.add('flipped');
-                playPaperSound();
+        function loadText() {
+            document.getElementById('content').innerHTML = `<span id="verse">${archive[index]}</span>`;
+        }
+
+        function flipPage(dir) {
+            initAudio();
+            if (dir === 1 && index < archive.length - 1) {
+                const page = document.getElementById('active-page');
+                page.classList.add('page-flip-animation');
+                playCrispySFX();
 
                 setTimeout(() => {
-                    idx++;
+                    index++;
                     loadText();
-                    // 2. Reset page to bottom instantly, then fade in
                     page.style.transition = 'none';
-                    page.classList.remove('flipped');
+                    page.classList.remove('page-flip-animation');
                     page.style.opacity = '0';
-                    page.style.transform = 'scale(0.95)';
+                    page.style.transform = 'scale(0.85) translateZ(-150px)';
                     
                     setTimeout(() => {
-                        page.style.transition = 'transform 1.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s ease';
+                        page.style.transition = 'transform 1.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s ease';
                         page.style.opacity = '1';
-                        page.style.transform = 'scale(1)';
-                        if(isNarrationOn) speakNow();
-                    }, 50);
-                }, 1000);
-            } else if (dir === -1 && idx > 0) {
-                idx--;
+                        page.style.transform = 'scale(1) translateZ(0)';
+                        if(reading) startGraveNarrator();
+                    }, 60);
+                }, 1300);
+
+            } else if (dir === -1 && index > 0) {
+                index--;
                 loadText();
-                playPaperSound();
+                playCrispySFX();
             }
         }
 
-        function toggleNarrator() {
-            if (isNarrationOn) {
+        function handlePlay() {
+            initAudio();
+            if (reading) {
                 synth.cancel();
-                document.getElementById('play-trigger').innerText = "▶";
+                document.getElementById('play-btn').innerText = "▶";
             } else {
-                document.getElementById('play-trigger').innerText = "‖";
-                speakNow();
+                document.getElementById('play-btn').innerText = "‖";
+                startGraveNarrator();
             }
-            isNarrationOn = !isNarrationOn;
+            reading = !reading;
         }
 
-        function speakNow() {
+        function startGraveNarrator() {
             synth.cancel();
-            const textEl = document.querySelector('#page-content span');
-            textEl.classList.add('gold-highlight');
+            const verse = document.getElementById('verse');
+            verse.classList.add('gold-voice-highlight');
 
-            const utter = new SpeechSynthesisUtterance(wisdom[idx]);
-            utter.pitch = 0.6; // Grave Elegance
-            utter.rate = 0.8;  // Slow, Luxury Speed
+            const msg = new SpeechSynthesisUtterance(archive[index]);
+            msg.pitch = 0.55; 
+            msg.rate = 0.75;  
             
-            utter.onend = () => {
-                textEl.classList.remove('gold-highlight');
-                if (isNarrationOn && idx < wisdom.length - 1) {
-                    setTimeout(() => changePage(1), 1000);
+            msg.onend = () => {
+                verse.classList.remove('gold-voice-highlight');
+                if (reading && index < archive.length - 1) {
+                    setTimeout(() => flipPage(1), 1500);
                 }
             };
-            synth.speak(utter);
+            synth.speak(msg);
         }
 
-        function playPaperSound() {
-            const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.type = '
-        
+        function playCrispySFX() {
+            if(!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            const filter = audioCtx.createBiquadFilter();
+            osc.type = 'brown-noise'; 
+            filter.type = 'highpass'; filter.frequency.value = 1200;
+            gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
+            osc.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.6);
+        }
+
+        loadText();
+    </script>
+</body>
+</html>
