@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Veridian Archive | Sanctum Reader</title>
+    <title>Veridian Archive | Gesture Sanctum</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Fauna+One&display=swap" rel="stylesheet">
     <style>
@@ -11,178 +11,182 @@
         body { 
             font-family: 'Fauna One', serif; background: #050505;
             margin: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; height: 100vh;
+            touch-action: none; /* Prevents browser pull-to-refresh during swiping */
         }
 
         .lamp-glow {
-            position: absolute; width: 100vw; height: 100vh;
+            position: absolute; inset: 0;
             background: radial-gradient(circle, rgba(212, 175, 55, 0.08) 0%, transparent 70%);
-            pointer-events: none; z-index: 0;
+            pointer-events: none;
         }
 
-        /* The Book Stage */
         .stage {
-            position: relative; width: 90vw; max-width: 500px; height: 82vh;
-            perspective: 2500px; z-index: 10;
+            position: relative; width: 92vw; max-width: 500px; height: 80vh;
+            perspective: 2000px; z-index: 10;
         }
 
         .page {
             position: absolute; inset: 0; background: var(--paper);
-            border-radius: 8px 40px 40px 8px; padding: 40px; color: #1F150D;
+            border-radius: 10px 40px 40px 10px; padding: 40px; color: #1F150D;
             box-shadow: -15px 15px 50px rgba(0,0,0,0.8), inset 20px 0 40px rgba(0,0,0,0.05);
             transform-origin: left center;
-            transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1), opacity 0.6s ease, box-shadow 1s;
-            backface-visibility: hidden;
         }
 
-        /* THE CURVY PEEL: This simulates the "rolled" look from the video */
-        .peel-animation {
-            transform: rotateY(-110deg) skewY(-10deg) scaleX(0.8) translateZ(50px);
-            box-shadow: 50px 50px 100px rgba(0,0,0,0.5);
+        .page-ghost {
+            position: absolute; inset: 0; background: var(--paper);
+            border-radius: 10px 40px 40px 10px; padding: 40px; color: #1F150D;
+            transform-origin: left center; z-index: 30; pointer-events: none;
+            transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1), opacity 1s;
+        }
+
+        .peel-curve {
+            transform: rotateY(-120deg) skewY(-10deg) translateZ(100px);
             opacity: 0;
         }
 
-        /* The Gold Highlight - One sentence at a time */
-        .sentence { transition: all 0.5s ease; border-radius: 4px; padding: 0 4px; }
-        .reading-now { 
-            background-color: rgba(212, 175, 55, 0.35); 
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
-            color: #000;
-        }
+        .sentence { transition: background 0.4s ease; padding: 0 4px; border-radius: 4px; }
+        .active-glow { background: rgba(212, 175, 55, 0.35); color: #000; }
 
-        .content-area { font-size: 1.15rem; line-height: 2; text-align: justify; height: 100%; }
+        .content { font-size: 1.2rem; line-height: 2; text-align: justify; user-select: none; }
 
-        /* Navigation */
         .nav-dock {
-            position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
-            display: flex; align-items: center; gap: 60px; z-index: 100;
+            position: fixed; bottom: 30px; display: flex; align-items: center; gap: 50px; z-index: 100;
         }
-        .nav-btn { color: var(--gold); font-size: 2rem; opacity: 0.5; transition: 0.3s; cursor: pointer; background: none; border: none; }
-        .nav-btn:hover { opacity: 1; transform: scale(1.1); }
-        .play-ring { width: 65px; height: 65px; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .btn { color: var(--gold); font-size: 2rem; opacity: 0.5; cursor: pointer; background: none; border: none; }
+        .play-ring { width: 60px; height: 60px; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
 
     <div class="lamp-glow"></div>
 
-    <div class="stage" id="stage">
-        <div class="page" id="page-back" style="z-index: 1;">
-            <div id="back-content" class="content-area opacity-40"></div>
-        </div>
-        <div class="page" id="page-top" style="z-index: 2;">
-            <div id="front-content" class="content-area"></div>
+    <div class="stage" id="book-stage">
+        <div class="page" id="main-page">
+            <div id="page-content" class="content"></div>
         </div>
     </div>
 
     <div class="nav-dock">
-        <button onclick="turnPage(-1)" class="nav-btn">◁</button>
+        <button onclick="changePage(-1)" class="btn">◁</button>
         <div class="play-ring">
-            <button onclick="toggleNarrator()" id="play-btn" class="nav-btn">▶</button>
+            <button onclick="toggleAudio()" id="play-btn" class="btn">▶</button>
         </div>
-        <button onclick="turnPage(1)" class="nav-btn">▷</button>
+        <button onclick="changePage(1)" class="btn">▷</button>
     </div>
 
     <script>
         const archive = [
-            ["A reader lives a thousand lives before he dies.", "The man who never reads lives only one.", "In this sanctuary, time slows down."],
-            ["Wisdom is the gold of the soul, refined by fire.", "The oak tree grows in silence, not in noise.", "Deep roots fear no wind."],
-            ["Every page turned is a life rediscovered.", "The ancients speak in whispers to those who listen.", "The golden path is under your feet."]
+            ["A reader lives a thousand lives before he dies.", "The man who never reads lives only one.", "Books are a uniquely portable magic."],
+            ["Wisdom begins in wonder.", "The only true wisdom is in knowing you know nothing.", "Knowledge speaks, but wisdom listens."],
+            ["Nature does not hurry, yet everything is accomplished.", "To be grounded is to be powerful.", "The oak fought the wind and broke, the willow bent and survived."]
         ];
 
-        let pageIdx = 0;
-        let sentIdx = 0;
-        let isReading = false;
-        let audioCtx;
+        let pIdx = 0; let sIdx = 0; let isPlaying = false;
         const synth = window.speechSynthesis;
+        let audioCtx;
 
-        function initAudio() {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        // --- GESTURE LOGIC ---
+        let touchStartX = 0;
+        const mainPage = document.getElementById('main-page');
+
+        mainPage.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, {passive: true});
+
+        mainPage.addEventListener('touchend', e => {
+            let touchEndX = e.changedTouches[0].screenX;
+            handleSwipe(touchStartX, touchEndX);
+        }, {passive: true});
+
+        // Mouse support for desktop swiping
+        mainPage.addEventListener('mousedown', e => { touchStartX = e.screenX; });
+        mainPage.addEventListener('mouseup', e => { handleSwipe(touchStartX, e.screenX); });
+
+        function handleSwipe(start, end) {
+            const threshold = 50;
+            if (start - end > threshold) changePage(1); // Swipe Left -> Next
+            if (end - start > threshold) changePage(-1); // Swipe Right -> Prev
         }
+        // ---------------------
 
-        function renderPage(targetId, pIdx) {
-            const container = document.getElementById(targetId);
-            container.innerHTML = archive[pIdx].map((s, i) => 
-                `<span class="sentence" id="s-${pIdx}-${i}">${s} </span>`
+        function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+
+        function render() {
+            const container = document.getElementById('page-content');
+            container.innerHTML = archive[pIdx].map((text, i) => 
+                `<span id="s-${i}" class="sentence">${text} </span>`
             ).join('');
+            updateHighlight();
         }
 
-        function turnPage(dir) {
-            initAudio();
-            if (dir === 1 && pageIdx < archive.length - 1) {
-                const topPage = document.getElementById('page-top');
-                topPage.classList.add('peel-animation');
-                playPaperSFX();
+        function updateHighlight() {
+            document.querySelectorAll('.sentence').forEach(s => s.classList.remove('active-glow'));
+            const current = document.getElementById(`s-${sIdx}`);
+            if (current) current.classList.add('active-glow');
+        }
 
-                setTimeout(() => {
-                    pageIdx++;
-                    sentIdx = 0;
-                    renderPage('front-content', pageIdx);
-                    if(pageIdx + 1 < archive.length) renderPage('back-content', pageIdx + 1);
-                    
-                    topPage.style.transition = 'none';
-                    topPage.classList.remove('peel-animation');
-                    setTimeout(() => {
-                        topPage.style.transition = 'transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1), opacity 0.6s ease';
-                        if(isReading) speakSentence();
-                    }, 50);
-                }, 1100);
-            } else if (dir === -1 && pageIdx > 0) {
-                pageIdx--;
-                sentIdx = 0;
-                renderPage('front-content', pageIdx);
+        function changePage(dir) {
+            initAudio();
+            if (dir === 1 && pIdx < archive.length - 1) {
+                const stage = document.getElementById('book-stage');
+                const ghost = document.createElement('div');
+                ghost.className = 'page-ghost';
+                ghost.innerHTML = document.getElementById('main-page').innerHTML;
+                stage.appendChild(ghost);
+
+                setTimeout(() => ghost.classList.add('peel-curve'), 10);
+                playSFX();
+
+                pIdx++; sIdx = 0; render();
+
+                setTimeout(() => ghost.remove(), 1200);
+                if (isPlaying) speak();
+            } else if (dir === -1 && pIdx > 0) {
+                pIdx--; sIdx = 0; render(); playSFX();
             }
         }
 
-        function toggleNarrator() {
+        function toggleAudio() {
             initAudio();
-            if (isReading) {
+            if (isPlaying) {
                 synth.cancel();
                 document.getElementById('play-btn').innerText = "▶";
-                document.querySelector('.reading-now')?.classList.remove('reading-now');
             } else {
                 document.getElementById('play-btn').innerText = "‖";
-                speakSentence();
+                speak();
             }
-            isReading = !isReading;
+            isPlaying = !isPlaying;
         }
 
-        function speakSentence() {
-            if (!isReading) return;
-            
-            // Highlight current sentence
-            document.querySelectorAll('.reading-now').forEach(el => el.classList.remove('reading-now'));
-            const el = document.getElementById(`s-${pageIdx}-${sentIdx}`);
-            if (el) el.classList.add('reading-now');
-
-            const msg = new SpeechSynthesisUtterance(archive[pageIdx][sentIdx]);
+        function speak() {
+            if (!isPlaying) return;
+            synth.cancel();
+            updateHighlight();
+            const msg = new SpeechSynthesisUtterance(archive[pIdx][sIdx]);
             msg.pitch = 0.6; msg.rate = 0.8;
-            
             msg.onend = () => {
-                if (!isReading) return;
-                if (sentIdx < archive[pageIdx].length - 1) {
-                    sentIdx++;
-                    setTimeout(speakSentence, 600);
+                if (!isPlaying) return;
+                if (sIdx < archive[pIdx].length - 1) {
+                    sIdx++; setTimeout(speak, 500);
                 } else {
-                    setTimeout(() => turnPage(1), 1000);
+                    setTimeout(() => changePage(1), 800);
                 }
             };
             synth.speak(msg);
         }
 
-        function playPaperSFX() {
+        function playSFX() {
             if(!audioCtx) return;
             const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
+            const g = audioCtx.createGain();
             osc.type = 'brown-noise';
-            gain.gain.setValueAtTime(0.03, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start();
+            g.gain.setValueAtTime(0.02, audioCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
+            osc.connect(g); g.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.6);
         }
 
-        // Setup Initial View
-        renderPage('front-content', 0);
-        renderPage('back-content', 1);
+        render();
     </script>
 </body>
 </html>
