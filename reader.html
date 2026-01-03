@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Veridian Archive | Corrected Logic</title>
+    <title>Veridian Archive | Dual-Control Sanctum</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Fauna+One&display=swap" rel="stylesheet">
     <style>
@@ -14,7 +14,6 @@
             touch-action: none;
         }
 
-        /* Interaction Unlocker */
         #unlock-screen {
             position: fixed; inset: 0; z-index: 500; background: #050505;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -28,7 +27,7 @@
 
         .stage {
             position: relative; width: 92vw; max-width: 500px; height: 80vh;
-            perspective: 2500px; z-index: 10;
+            perspective: 2000px; z-index: 10;
         }
 
         .page {
@@ -38,7 +37,7 @@
             transform-origin: left center;
         }
 
-        /* FORWARD GHOST: Peels to the left */
+        /* Forward Peel */
         .ghost-forward {
             position: absolute; inset: 0; background: var(--paper);
             border-radius: 10px 40px 40px 10px; padding: 40px;
@@ -47,7 +46,7 @@
         }
         .peel-to-left { transform: rotateY(-120deg) skewY(-10deg) translateZ(100px); opacity: 0; }
 
-        /* BACKWARD GHOST: Comes from the left back to center */
+        /* Backward Peel */
         .ghost-backward {
             position: absolute; inset: 0; background: var(--paper);
             border-radius: 10px 40px 40px 10px; padding: 40px;
@@ -57,11 +56,12 @@
         }
         .return-to-center { transform: rotateY(0deg) skewY(0deg) translateZ(0px); opacity: 1; }
 
+        /* Text & Highlights */
         .sentence { transition: background 0.4s ease; padding: 0 4px; border-radius: 4px; }
-        .active-glow { background: rgba(212, 175, 55, 0.35); color: #000; box-shadow: 0 0 10px rgba(212, 175, 55, 0.2); }
-
+        .active-glow { background: rgba(212, 175, 55, 0.35); color: #000; box-shadow: 0 0 10px rgba(212, 175, 55, 0.1); }
         .content { font-size: 1.1rem; line-height: 1.8; text-align: justify; user-select: none; }
 
+        /* Controls */
         .nav-dock {
             position: fixed; bottom: 30px; display: flex; align-items: center; gap: 50px; z-index: 100;
         }
@@ -85,11 +85,11 @@
     </div>
 
     <div class="nav-dock">
-        <button onclick="changePage(-1)" class="btn">◁</button>
+        <button onclick="skipSentence(-1)" class="btn">◁</button>
         <div class="play-ring">
             <button onclick="toggleAudio()" id="play-btn" class="btn">▶</button>
         </div>
-        <button onclick="changePage(1)" class="btn">▷</button>
+        <button onclick="skipSentence(1)" class="btn">▷</button>
     </div>
 
     <script>
@@ -105,63 +105,68 @@
         let touchStartX = 0;
 
         function startSanctum() {
-            // CRITICAL: Unlock both Audio Engines inside the click event
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             audioCtx.resume();
-            
-            // Prime the Speech Engine with a silent utterance
-            const silence = new SpeechSynthesisUtterance("");
-            synth.speak(silence);
-
+            synth.speak(new SpeechSynthesisUtterance(""));
             document.getElementById('unlock-screen').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('unlock-screen').remove();
-                render();
-            }, 600);
+            setTimeout(() => { document.getElementById('unlock-screen').remove(); render(); }, 600);
         }
 
+        // --- SWIPE FOR PAGE FLIP ---
         const mainPage = document.getElementById('main-page');
         mainPage.addEventListener('touchstart', e => touchStartX = e.changedTouches[0].screenX, {passive: true});
-        mainPage.addEventListener('touchend', e => handleSwipe(touchStartX, e.changedTouches[0].screenX), {passive: true});
+        mainPage.addEventListener('touchend', e => {
+            let diff = touchStartX - e.changedTouches[0].screenX;
+            if (Math.abs(diff) > 50) flipPage(diff > 0 ? 1 : -1);
+        }, {passive: true});
 
-        function handleSwipe(start, end) {
-            if (start - end > 50) changePage(1);
-            if (end - start > 50) changePage(-1);
-        }
-
-        function changePage(dir) {
-            if (audioCtx) audioCtx.resume();
-
-            if (dir === 1 && pIdx < archive.length - 1) {
-                // FORWARD: Ghost peels away to the left
+        function flipPage(dir) {
+            if ((dir === 1 && pIdx < archive.length - 1) || (dir === -1 && pIdx > 0)) {
                 const stage = document.getElementById('book-stage');
                 const ghost = document.createElement('div');
-                ghost.className = 'ghost-forward';
-                ghost.innerHTML = document.getElementById('main-page').innerHTML;
-                stage.appendChild(ghost);
-
-                setTimeout(() => ghost.classList.add('peel-to-left'), 10);
+                
+                if (dir === 1) {
+                    ghost.className = 'ghost-forward';
+                    ghost.innerHTML = document.getElementById('main-page').innerHTML;
+                    stage.appendChild(ghost);
+                    setTimeout(() => ghost.classList.add('peel-to-left'), 10);
+                    pIdx++; sIdx = 0; render();
+                } else {
+                    ghost.className = 'ghost-backward';
+                    pIdx--; sIdx = 0; render();
+                    ghost.innerHTML = document.getElementById('main-page').innerHTML;
+                    stage.appendChild(ghost);
+                    setTimeout(() => ghost.classList.add('return-to-center'), 10);
+                }
+                
                 playSFX();
-
-                pIdx++; sIdx = 0; render();
                 setTimeout(() => ghost.remove(), 1200);
                 if (isPlaying) speak();
+            }
+        }
 
-            } else if (dir === -1 && pIdx > 0) {
-                // BACKWARD: Ghost comes from the left and lands on the stack
-                const stage = document.getElementById('book-stage');
-                const ghost = document.createElement('div');
-                ghost.className = 'ghost-backward';
-                
-                // Set the ghost content to what the PREVIOUS page was
-                pIdx--; sIdx = 0;
-                render(); 
-                ghost.innerHTML = document.getElementById('main-page').innerHTML;
-                stage.appendChild(ghost);
-
-                setTimeout(() => ghost.classList.add('return-to-center'), 10);
-                playSFX();
-                setTimeout(() => ghost.remove(), 1200);
+        // --- BUTTONS FOR SENTENCE SEEKING ---
+        function skipSentence(dir) {
+            if (audioCtx) audioCtx.resume();
+            
+            if (dir === 1) { // Forward
+                if (sIdx < archive[pIdx].length - 1) {
+                    sIdx++;
+                    if (isPlaying) speak(); else updateHighlight();
+                } else {
+                    flipPage(1); // Auto-flip if at end of page
+                }
+            } else { // Backward
+                if (sIdx > 0) {
+                    sIdx--;
+                    if (isPlaying) speak(); else updateHighlight();
+                } else if (pIdx > 0) {
+                    // Logic to go to the last sentence of previous page
+                    pIdx--; 
+                    sIdx = archive[pIdx].length - 1;
+                    render(); // Instant swap for seeking backwards
+                    if (isPlaying) speak();
+                }
             }
         }
 
@@ -194,7 +199,7 @@
             msg.onend = () => {
                 if (isPlaying) {
                     if (sIdx < archive[pIdx].length - 1) { sIdx++; setTimeout(speak, 500); } 
-                    else if (pIdx < archive.length - 1) { setTimeout(() => changePage(1), 800); }
+                    else if (pIdx < archive.length - 1) { setTimeout(() => flipPage(1), 800); }
                 }
             };
             synth.speak(msg);
