@@ -3,209 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Veridian Reader | Illuminated Sanctum</title>
+    <title>Veridian Archive | Professional Reader</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Fauna+One&display=swap" rel="stylesheet">
     <style>
         :root { --gold: #D4AF37; --paper: #F3F0E6; --oak: #1A1108; }
         body { 
-            font-family: 'Fauna One', serif; 
-            background: #050505;
+            font-family: 'Fauna One', serif; background: #050505;
             margin: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; height: 100vh;
-            perspective: 2500px;
         }
 
-        /* The Warm Library Lamp Glow */
+        /* Warm Library Ambiance */
         .lamp-glow {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80vw; height: 80vw;
-            background: radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.05) 40%, transparent 70%);
-            filter: blur(60px);
-            pointer-events: none;
-            z-index: 0;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 90vw; height: 90vh;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.12) 0%, transparent 70%);
+            pointer-events: none; z-index: 0;
         }
 
-        .book-stage {
+        /* The Book Container (Now taller for more text) */
+        .stage {
             position: relative;
-            width: 85vw; max-width: 450px; height: 65vh;
-            transform-style: preserve-3d;
-            z-index: 10;
+            width: 92vw; max-width: 550px; height: 85vh; /* Larger for high-volume reading */
+            z-index: 10; perspective: 2000px;
         }
 
-        /* The Luxurious Page with Curved Corners */
-        .page-sheet {
-            position: absolute;
-            inset: 0;
+        /* The Physical Page */
+        .page {
+            position: absolute; inset: 0;
             background: var(--paper);
-            border-radius: 12px 50px 50px 12px;
-            padding: 45px;
-            color: #1F150D;
-            box-shadow: 
-                -20px 20px 60px rgba(0,0,0,0.7), 
-                inset 20px 0 40px rgba(0,0,0,0.08);
+            border-radius: 8px 30px 30px 8px;
+            padding: 35px; color: #1F150D;
+            box-shadow: -10px 10px 40px rgba(0,0,0,0.6), inset 15px 0 30px rgba(0,0,0,0.05);
             transform-origin: left center;
-            transition: transform 1.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.8s ease;
-            display: flex; flex-direction: column; justify-content: center;
+            /* Smooth PEEL transition - not flying */
+            transition: transform 0.9s cubic-bezier(0.645, 0.045, 0.355, 1), opacity 0.4s ease;
         }
 
-        /* Weighted Physical Flip */
-        .page-flip-animation {
-            transform: rotateY(-140deg) translateZ(200px) rotateX(15deg) scale(0.85);
+        /* The On-Screen Peel Animation */
+        .peel-off {
+            transform: rotateY(-100deg) skewY(-5deg);
             opacity: 0;
             pointer-events: none;
         }
 
-        /* GOLDEN TEXT ILLUMINATION */
-        .gold-voice-highlight {
-            color: #000;
-            background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.3), transparent);
-            background-size: 200% 100%;
-            animation: shine 2s infinite linear;
-            text-shadow: 0 0 12px rgba(212, 175, 55, 0.6);
-            border-radius: 4px;
-            padding: 2px 8px;
-            transition: all 0.6s ease;
+        /* Steady Golden Highlight (No Flicker) */
+        .gold-steady {
+            background-color: rgba(212, 175, 55, 0.3); /* Solid Champagne Gold */
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
+            color: #000; border-radius: 4px; padding: 2px 4px;
+            transition: background-color 0.4s ease;
         }
 
-        @keyframes shine {
-            0% { background-position: 100% 0; }
-            100% { background-position: -100% 0; }
+        /* Condensed Professional Typography */
+        .content-text { 
+            font-size: 1.1rem; /* Slightly smaller for more content */
+            line-height: 1.8; 
+            text-align: justify; 
+            overflow-y: auto;
+            max-height: 85%;
         }
 
-        .text-body { font-size: 1.4rem; line-height: 2.4; font-style: italic; text-align: justify; }
-
-        /* Navigation Dock */
+        /* Nav Dock */
         .nav-dock {
-            position: fixed; bottom: 50px; left: 50%; transform: translateX(-50%);
-            display: flex; align-items: center; gap: 60px; z-index: 100;
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            display: flex; align-items: center; gap: 50px; z-index: 100;
         }
-        .icon-btn { color: var(--gold); font-size: 1.8rem; opacity: 0.4; transition: 0.4s; cursor: pointer; background: none; border: none; }
-        .icon-btn:hover { opacity: 1; transform: scale(1.1); }
-        .play-circle { 
-            width: 70px; height: 70px; 
-            border: 1px solid rgba(212, 175, 55, 0.2); 
-            border-radius: 50%; display: flex; align-items: center; justify-content: center; 
-            background: rgba(212, 175, 55, 0.03);
-        }
+        .icon-btn { color: var(--gold); font-size: 1.6rem; opacity: 0.4; transition: 0.3s; cursor: pointer; background: none; border: none; }
+        .icon-btn:hover { opacity: 1; }
+        .play-circle { width: 55px; height: 55px; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
 
     <div class="lamp-glow"></div>
 
-    <button onclick="location.href='index.html'" class="fixed top-10 left-10 text-[#D4AF37] opacity-30 text-[10px] tracking-[0.4em] z-50">← ARCHIVE</button>
+    <div class="stage">
+        <div class="page" id="bg-page" style="z-index: 1;">
+             <span class="text-[9px] uppercase tracking-widest opacity-20 mb-6 block">Sanctum Archive</span>
+             <div id="next-content" class="content-text">...</div>
+        </div>
 
-    <div class="book-stage">
-        <div class="page-sheet" id="active-page">
-            <span class="text-[10px] uppercase tracking-[0.5em] opacity-30 mb-12 block text-center">Sanctum Manuscript</span>
-            <div id="content" class="text-body">
+        <div class="page" id="main-page" style="z-index: 2;">
+            <span class="text-[9px] uppercase tracking-widest opacity-20 mb-6 block">Sanctum Archive</span>
+            <div id="active-content" class="content-text">
                 </div>
         </div>
     </div>
 
     <div class="nav-dock">
-        <button onclick="flipPage(-1)" class="icon-btn">◁</button>
+        <button onclick="changePage(-1)" class="icon-btn">◁</button>
         <div class="play-circle">
-            <button onclick="handlePlay()" id="play-btn" class="icon-btn" style="opacity:1">▶</button>
+            <button onclick="handlePlay()" id="play-btn" class="icon-btn">▶</button>
         </div>
-        <button onclick="flipPage(1)" class="icon-btn">▷</button>
+        <button onclick="changePage(1)" class="icon-btn">▷</button>
     </div>
 
     <script>
         const archive = [
-            "A reader lives a thousand lives before he dies. The man who never reads lives only one.",
-            "Wisdom is the gold of the soul, refined by the fire of experience.",
-            "Nature does not hurry, yet everything is accomplished. Stay grounded.",
-            "In the silence of the library, the whispers of the ancients become clear.",
-            "The path is long, but the words of the wise are a lamp unto your feet."
+            "This is a longer excerpt to demonstrate the condensed font. In a world of fleeting whispers, the grounded luxury of a physical book remains a sanctuary for the restless mind. Here, we don't just read; we inhabit the thoughts of the ancients.",
+            "The second page reveals itself with a smooth peel. By increasing the page height and reducing the line spacing, we ensure that a 783-page book feels natural and efficient, rather than an endless scroll of singular sentences.",
+            "Wisdom is a slow burn. The gold highlight you see now is steady, designed for long hours of contemplation without straining the eyes. It guides your focus like a gentle lantern in a dark library.",
+            "The natureous vibe is maintained through the warm lamp glow. As you progress, notice how the page peels across the screen rather than flying out, keeping your eyes fixed on the center of the archive."
         ];
 
         let index = 0;
-        let reading = false;
+        let isReading = false;
         let audioCtx;
         const synth = window.speechSynthesis;
 
-        function initAudio() {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-
         function loadText() {
-            document.getElementById('content').innerHTML = `<span id="verse">${archive[index]}</span>`;
+            document.getElementById('active-content').innerHTML = `<span id="verse">${archive[index]}</span>`;
+            if (index + 1 < archive.length) {
+                document.getElementById('next-content').innerText = archive[index + 1];
+            }
         }
 
-        function flipPage(dir) {
-            initAudio();
+        function changePage(dir) {
             if (dir === 1 && index < archive.length - 1) {
-                const page = document.getElementById('active-page');
-                page.classList.add('page-flip-animation');
-                playCrispySFX();
+                const page = document.getElementById('main-page');
+                page.classList.add('peel-off');
+                playPaper();
 
                 setTimeout(() => {
                     index++;
                     loadText();
                     page.style.transition = 'none';
-                    page.classList.remove('page-flip-animation');
-                    page.style.opacity = '0';
-                    page.style.transform = 'scale(0.85) translateZ(-150px)';
-                    
+                    page.classList.remove('peel-off');
+                    page.style.opacity = '1';
+                    // The new page has appeared suddenly underneath, we just reset the top page to match it
                     setTimeout(() => {
-                        page.style.transition = 'transform 1.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s ease';
-                        page.style.opacity = '1';
-                        page.style.transform = 'scale(1) translateZ(0)';
-                        if(reading) startGraveNarrator();
-                    }, 60);
-                }, 1300);
-
+                        page.style.transition = 'transform 0.9s cubic-bezier(0.645, 0.045, 0.355, 1), opacity 0.4s ease';
+                        if(isReading) startVoice();
+                    }, 50);
+                }, 900);
             } else if (dir === -1 && index > 0) {
                 index--;
                 loadText();
-                playCrispySFX();
             }
         }
 
         function handlePlay() {
-            initAudio();
-            if (reading) {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (isReading) {
                 synth.cancel();
                 document.getElementById('play-btn').innerText = "▶";
             } else {
                 document.getElementById('play-btn').innerText = "‖";
-                startGraveNarrator();
+                startVoice();
             }
-            reading = !reading;
+            isReading = !isReading;
         }
 
-        function startGraveNarrator() {
+        function startVoice() {
             synth.cancel();
             const verse = document.getElementById('verse');
-            verse.classList.add('gold-voice-highlight');
+            verse.classList.add('gold-steady');
 
             const msg = new SpeechSynthesisUtterance(archive[index]);
-            msg.pitch = 0.55; 
-            msg.rate = 0.75;  
-            
+            msg.pitch = 0.6; msg.rate = 0.8;
             msg.onend = () => {
-                verse.classList.remove('gold-voice-highlight');
-                if (reading && index < archive.length - 1) {
-                    setTimeout(() => flipPage(1), 1500);
+                if (isReading && index < archive.length - 1) {
+                    setTimeout(() => changePage(1), 800);
                 }
             };
             synth.speak(msg);
         }
 
-        function playCrispySFX() {
+        function playPaper() {
             if(!audioCtx) return;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            const filter = audioCtx.createBiquadFilter();
-            osc.type = 'brown-noise'; 
-            filter.type = 'highpass'; filter.frequency.value = 1200;
-            gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
-            osc.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.6);
+            osc.type = 'brown-noise';
+            gain.gain.setValueAtTime(0.02, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start();
         }
 
         loadText();
