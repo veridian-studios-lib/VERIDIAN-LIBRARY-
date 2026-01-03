@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Veridian Archive | Final Sanctum</title>
+    <title>Veridian Archive | Corrected Logic</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Fauna+One&display=swap" rel="stylesheet">
     <style>
@@ -18,7 +18,6 @@
         #unlock-screen {
             position: fixed; inset: 0; z-index: 500; background: #050505;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: opacity 1s ease;
         }
 
         .lamp-glow {
@@ -29,7 +28,7 @@
 
         .stage {
             position: relative; width: 92vw; max-width: 500px; height: 80vh;
-            perspective: 2000px; z-index: 10;
+            perspective: 2500px; z-index: 10;
         }
 
         .page {
@@ -39,23 +38,24 @@
             transform-origin: left center;
         }
 
-        /* Forward Flip Animation */
-        .page-ghost-right {
+        /* FORWARD GHOST: Peels to the left */
+        .ghost-forward {
             position: absolute; inset: 0; background: var(--paper);
-            border-radius: 10px 40px 40px 10px; padding: 40px; color: #1F150D;
+            border-radius: 10px 40px 40px 10px; padding: 40px;
             transform-origin: left center; z-index: 30; pointer-events: none;
-            transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1), opacity 1s;
+            transition: transform 1.1s cubic-bezier(0.645, 0.045, 0.355, 1), opacity 0.8s;
         }
-        .peel-forward { transform: rotateY(-120deg) skewY(-10deg) translateZ(100px); opacity: 0; }
+        .peel-to-left { transform: rotateY(-120deg) skewY(-10deg) translateZ(100px); opacity: 0; }
 
-        /* Backward Flip Animation */
-        .page-ghost-left {
+        /* BACKWARD GHOST: Comes from the left back to center */
+        .ghost-backward {
             position: absolute; inset: 0; background: var(--paper);
-            border-radius: 10px 40px 40px 10px; padding: 40px; color: #1F150D;
-            transform-origin: right center; z-index: 30; pointer-events: none;
-            transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1), opacity 1s;
+            border-radius: 10px 40px 40px 10px; padding: 40px;
+            transform-origin: left center; z-index: 30; pointer-events: none;
+            transform: rotateY(-120deg) skewY(-10deg) translateZ(100px); opacity: 0;
+            transition: transform 1.1s cubic-bezier(0.215, 0.610, 0.355, 1), opacity 0.8s;
         }
-        .peel-back { transform: rotateY(120deg) skewY(10deg) translateZ(100px); opacity: 0; }
+        .return-to-center { transform: rotateY(0deg) skewY(0deg) translateZ(0px); opacity: 1; }
 
         .sentence { transition: background 0.4s ease; padding: 0 4px; border-radius: 4px; }
         .active-glow { background: rgba(212, 175, 55, 0.35); color: #000; box-shadow: 0 0 10px rgba(212, 175, 55, 0.2); }
@@ -105,18 +105,21 @@
         let touchStartX = 0;
 
         function startSanctum() {
-            initAudio();
+            // CRITICAL: Unlock both Audio Engines inside the click event
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            audioCtx.resume();
+            
+            // Prime the Speech Engine with a silent utterance
+            const silence = new SpeechSynthesisUtterance("");
+            synth.speak(silence);
+
             document.getElementById('unlock-screen').style.opacity = '0';
-            setTimeout(() => document.getElementById('unlock-screen').remove(), 1000);
-            render();
+            setTimeout(() => {
+                document.getElementById('unlock-screen').remove();
+                render();
+            }, 600);
         }
 
-        function initAudio() { 
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-        }
-
-        // --- GESTURE & FLIP LOGIC ---
         const mainPage = document.getElementById('main-page');
         mainPage.addEventListener('touchstart', e => touchStartX = e.changedTouches[0].screenX, {passive: true});
         mainPage.addEventListener('touchend', e => handleSwipe(touchStartX, e.changedTouches[0].screenX), {passive: true});
@@ -127,24 +130,38 @@
         }
 
         function changePage(dir) {
-            initAudio();
-            if ((dir === 1 && pIdx < archive.length - 1) || (dir === -1 && pIdx > 0)) {
+            if (audioCtx) audioCtx.resume();
+
+            if (dir === 1 && pIdx < archive.length - 1) {
+                // FORWARD: Ghost peels away to the left
                 const stage = document.getElementById('book-stage');
                 const ghost = document.createElement('div');
-                
-                // Ghost Logic
-                ghost.className = dir === 1 ? 'page-ghost-right' : 'page-ghost-left';
+                ghost.className = 'ghost-forward';
                 ghost.innerHTML = document.getElementById('main-page').innerHTML;
                 stage.appendChild(ghost);
 
-                // Animation Trigger
-                setTimeout(() => ghost.classList.add(dir === 1 ? 'peel-forward' : 'peel-back'), 10);
+                setTimeout(() => ghost.classList.add('peel-to-left'), 10);
                 playSFX();
 
-                pIdx += dir; sIdx = 0; render();
-
+                pIdx++; sIdx = 0; render();
                 setTimeout(() => ghost.remove(), 1200);
                 if (isPlaying) speak();
+
+            } else if (dir === -1 && pIdx > 0) {
+                // BACKWARD: Ghost comes from the left and lands on the stack
+                const stage = document.getElementById('book-stage');
+                const ghost = document.createElement('div');
+                ghost.className = 'ghost-backward';
+                
+                // Set the ghost content to what the PREVIOUS page was
+                pIdx--; sIdx = 0;
+                render(); 
+                ghost.innerHTML = document.getElementById('main-page').innerHTML;
+                stage.appendChild(ghost);
+
+                setTimeout(() => ghost.classList.add('return-to-center'), 10);
+                playSFX();
+                setTimeout(() => ghost.remove(), 1200);
             }
         }
 
@@ -162,7 +179,7 @@
         }
 
         function toggleAudio() {
-            initAudio();
+            if (audioCtx) audioCtx.resume();
             if (isPlaying) { synth.cancel(); document.getElementById('play-btn').innerText = "▶"; } 
             else { document.getElementById('play-btn').innerText = "‖"; speak(); }
             isPlaying = !isPlaying;
