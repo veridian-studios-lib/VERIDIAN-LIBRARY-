@@ -11,87 +11,45 @@
         body { 
             font-family: 'Fauna One', serif; background: #050505;
             margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh;
-            color: var(--paper); overflow-x: hidden;
+            color: var(--paper); overflow-y: auto;
         }
 
         .lamp-glow {
             position: fixed; inset: 0;
-            background: radial-gradient(circle at 50% 10%, rgba(212, 175, 55, 0.12) 0%, transparent 60%);
+            background: radial-gradient(circle at 50% 10%, rgba(212, 175, 55, 0.15) 0%, transparent 70%);
             pointer-events: none; z-index: 1;
         }
 
-        /* Subtle Floating Particles */
-        .dust {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: url('https://www.transparenttextures.com/patterns/stardust.png');
-            opacity: 0.15; pointer-events: none; z-index: 2;
-        }
-
         .container {
-            max-width: 650px; width: 90%; z-index: 10; padding: 80px 0;
-            animation: fadeIn 3s ease-in;
+            max-width: 650px; width: 90%; z-index: 10; padding: 40px 0;
+            animation: fadeIn 1.5s ease-out; /* Faster fade-in */
         }
 
         .manifesto {
-            position: relative;
-            background: rgba(20, 15, 10, 0.6);
-            border: 1px solid rgba(212, 175, 55, 0.15);
-            padding: 60px;
-            border-radius: 4px;
-            box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+            background: rgba(20, 15, 10, 0.8);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            padding: 40px; border-radius: 4px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
             backdrop-filter: blur(10px);
         }
 
-        .manifesto::before {
-            content: ""; position: absolute; top: -2px; left: 50%; transform: translateX(-50%);
-            width: 80px; height: 1px; background: var(--gold);
-        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        h1 { font-family: 'Cinzel', serif; letter-spacing: 0.5em; color: var(--gold); text-shadow: 0 0 20px rgba(212, 175, 55, 0.4); }
-        
-        /* The Rhyming Soul-Shaking Prose */
-        .story-text {
-            line-height: 2.4;
-            text-align: justify;
-            font-size: 1.15rem;
-            font-style: italic;
-            color: rgba(243, 240, 230, 0.9);
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-        }
-
-        .gold-drop {
-            color: var(--gold);
-            font-family: 'Cinzel', serif;
-            font-size: 2.5rem;
-            float: left;
-            line-height: 1;
-            margin-right: 10px;
-            margin-top: 5px;
-        }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        .signature {
-            font-family: 'Cinzel', serif;
-            letter-spacing: 0.4em;
-            color: var(--gold);
-            font-size: 0.8rem;
-            margin-top: 40px;
-            opacity: 0.7;
-        }
+        .story-text { line-height: 2.2; text-align: justify; font-size: 1.1rem; font-style: italic; }
+        .gold-drop { color: var(--gold); font-family: 'Cinzel', serif; font-size: 3rem; float: left; margin-right: 12px; line-height: 1; }
     </style>
 </head>
 <body>
 
     <div class="lamp-glow"></div>
-    <div class="dust"></div>
 
-    <button onclick="window.history.back()" class="fixed top-10 left-10 text-[#D4AF37] opacity-20 hover:opacity-100 uppercase text-[9px] tracking-[0.5em] transition-all z-50">← Return to Silence</button>
+    <button onclick="window.location.href='index.html'" class="fixed top-10 left-10 text-[#D4AF37] opacity-40 hover:opacity-100 uppercase text-[10px] tracking-[0.4em] z-[100] cursor-pointer">
+        ← BACK
+    </button>
 
     <div class="container">
-        <div class="text-center mb-16">
-            <h1 class="text-3xl uppercase">The Origin</h1>
-            <p class="text-[9px] tracking-[0.6em] uppercase opacity-40 mt-4">A Manifesto of the Grave Reader</p>
+        <div class="text-center mb-10">
+            <h1 class="text-2xl uppercase tracking-[0.5em] text-[#D4AF37]">The Origin</h1>
         </div>
 
         <div class="manifesto">
@@ -100,19 +58,12 @@
                 <br><br>
                 My motive was simple, my purpose was clear: to reclaim the whispers that the modern age cannot hear. I believe that true luxury should not be a gate kept by gold, but a sanctuary for the spirit, where the truth can unfold. I made this library free because wisdom is a breath, a birthright of the living that outlasts even death. 
                 <br><br>
-                Every curve of the page, every golden glow, was crafted to let your racing pulse slow. Every grave whisper of the narrator’s deep tone, was designed to remind you that you are never alone. This is my action, my gift, and my light—a stand for the depth that stays hidden in the night. 
-                <br><br>
-                For those who still seek what the ancients once knew: the Veridian Archive was built, in silence, for you.
+                This is my action, my gift, and my light—a stand for the depth that stays hidden in the night. For those who still seek what the ancients once knew: the Veridian Archive was built, in silence, for you.
             </div>
-
-            <div class="text-center mt-12">
-                <div class="signature">B Y • [ Y O U R • N A M E ]</div>
-                <div class="text-[8px] uppercase tracking-[0.4em] opacity-30 mt-2">Architect of the Sanctum</div>
+            
+            <div class="mt-10 text-center">
+                <p class="text-[10px] tracking-[0.4em] text-[#D4AF37] uppercase opacity-60">Architect of the Sanctum</p>
             </div>
-        </div>
-
-        <div class="mt-20 text-center opacity-20">
-            <p class="text-[10px] uppercase tracking-[0.8em]">Knowledge is the only wealth that grows when shared.</p>
         </div>
     </div>
 
