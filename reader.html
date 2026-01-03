@@ -3,185 +3,186 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Veridian Archive | Professional Reader</title>
+    <title>Veridian Archive | Sanctum Reader</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Fauna+One&display=swap" rel="stylesheet">
     <style>
-        :root { --gold: #D4AF37; --paper: #F3F0E6; --oak: #1A1108; }
+        :root { --gold: #D4AF37; --paper: #F3F0E6; }
         body { 
             font-family: 'Fauna One', serif; background: #050505;
             margin: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; height: 100vh;
         }
 
-        /* Warm Library Ambiance */
         .lamp-glow {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 90vw; height: 90vh;
-            background: radial-gradient(circle, rgba(212, 175, 55, 0.12) 0%, transparent 70%);
+            position: absolute; width: 100vw; height: 100vh;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.08) 0%, transparent 70%);
             pointer-events: none; z-index: 0;
         }
 
-        /* The Book Container (Now taller for more text) */
+        /* The Book Stage */
         .stage {
-            position: relative;
-            width: 92vw; max-width: 550px; height: 85vh; /* Larger for high-volume reading */
-            z-index: 10; perspective: 2000px;
+            position: relative; width: 90vw; max-width: 500px; height: 82vh;
+            perspective: 2500px; z-index: 10;
         }
 
-        /* The Physical Page */
         .page {
-            position: absolute; inset: 0;
-            background: var(--paper);
-            border-radius: 8px 30px 30px 8px;
-            padding: 35px; color: #1F150D;
-            box-shadow: -10px 10px 40px rgba(0,0,0,0.6), inset 15px 0 30px rgba(0,0,0,0.05);
+            position: absolute; inset: 0; background: var(--paper);
+            border-radius: 8px 40px 40px 8px; padding: 40px; color: #1F150D;
+            box-shadow: -15px 15px 50px rgba(0,0,0,0.8), inset 20px 0 40px rgba(0,0,0,0.05);
             transform-origin: left center;
-            /* Smooth PEEL transition - not flying */
-            transition: transform 0.9s cubic-bezier(0.645, 0.045, 0.355, 1), opacity 0.4s ease;
+            transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1), opacity 0.6s ease, box-shadow 1s;
+            backface-visibility: hidden;
         }
 
-        /* The On-Screen Peel Animation */
-        .peel-off {
-            transform: rotateY(-100deg) skewY(-5deg);
+        /* THE CURVY PEEL: This simulates the "rolled" look from the video */
+        .peel-animation {
+            transform: rotateY(-110deg) skewY(-10deg) scaleX(0.8) translateZ(50px);
+            box-shadow: 50px 50px 100px rgba(0,0,0,0.5);
             opacity: 0;
-            pointer-events: none;
         }
 
-        /* Steady Golden Highlight (No Flicker) */
-        .gold-steady {
-            background-color: rgba(212, 175, 55, 0.3); /* Solid Champagne Gold */
-            box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
-            color: #000; border-radius: 4px; padding: 2px 4px;
-            transition: background-color 0.4s ease;
+        /* The Gold Highlight - One sentence at a time */
+        .sentence { transition: all 0.5s ease; border-radius: 4px; padding: 0 4px; }
+        .reading-now { 
+            background-color: rgba(212, 175, 55, 0.35); 
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+            color: #000;
         }
 
-        /* Condensed Professional Typography */
-        .content-text { 
-            font-size: 1.1rem; /* Slightly smaller for more content */
-            line-height: 1.8; 
-            text-align: justify; 
-            overflow-y: auto;
-            max-height: 85%;
-        }
+        .content-area { font-size: 1.15rem; line-height: 2; text-align: justify; height: 100%; }
 
-        /* Nav Dock */
+        /* Navigation */
         .nav-dock {
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-            display: flex; align-items: center; gap: 50px; z-index: 100;
+            position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+            display: flex; align-items: center; gap: 60px; z-index: 100;
         }
-        .icon-btn { color: var(--gold); font-size: 1.6rem; opacity: 0.4; transition: 0.3s; cursor: pointer; background: none; border: none; }
-        .icon-btn:hover { opacity: 1; }
-        .play-circle { width: 55px; height: 55px; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .nav-btn { color: var(--gold); font-size: 2rem; opacity: 0.5; transition: 0.3s; cursor: pointer; background: none; border: none; }
+        .nav-btn:hover { opacity: 1; transform: scale(1.1); }
+        .play-ring { width: 65px; height: 65px; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
 
     <div class="lamp-glow"></div>
 
-    <div class="stage">
-        <div class="page" id="bg-page" style="z-index: 1;">
-             <span class="text-[9px] uppercase tracking-widest opacity-20 mb-6 block">Sanctum Archive</span>
-             <div id="next-content" class="content-text">...</div>
+    <div class="stage" id="stage">
+        <div class="page" id="page-back" style="z-index: 1;">
+            <div id="back-content" class="content-area opacity-40"></div>
         </div>
-
-        <div class="page" id="main-page" style="z-index: 2;">
-            <span class="text-[9px] uppercase tracking-widest opacity-20 mb-6 block">Sanctum Archive</span>
-            <div id="active-content" class="content-text">
-                </div>
+        <div class="page" id="page-top" style="z-index: 2;">
+            <div id="front-content" class="content-area"></div>
         </div>
     </div>
 
     <div class="nav-dock">
-        <button onclick="changePage(-1)" class="icon-btn">◁</button>
-        <div class="play-circle">
-            <button onclick="handlePlay()" id="play-btn" class="icon-btn">▶</button>
+        <button onclick="turnPage(-1)" class="nav-btn">◁</button>
+        <div class="play-ring">
+            <button onclick="toggleNarrator()" id="play-btn" class="nav-btn">▶</button>
         </div>
-        <button onclick="changePage(1)" class="icon-btn">▷</button>
+        <button onclick="turnPage(1)" class="nav-btn">▷</button>
     </div>
 
     <script>
         const archive = [
-            "This is a longer excerpt to demonstrate the condensed font. In a world of fleeting whispers, the grounded luxury of a physical book remains a sanctuary for the restless mind. Here, we don't just read; we inhabit the thoughts of the ancients.",
-            "The second page reveals itself with a smooth peel. By increasing the page height and reducing the line spacing, we ensure that a 783-page book feels natural and efficient, rather than an endless scroll of singular sentences.",
-            "Wisdom is a slow burn. The gold highlight you see now is steady, designed for long hours of contemplation without straining the eyes. It guides your focus like a gentle lantern in a dark library.",
-            "The natureous vibe is maintained through the warm lamp glow. As you progress, notice how the page peels across the screen rather than flying out, keeping your eyes fixed on the center of the archive."
+            ["A reader lives a thousand lives before he dies.", "The man who never reads lives only one.", "In this sanctuary, time slows down."],
+            ["Wisdom is the gold of the soul, refined by fire.", "The oak tree grows in silence, not in noise.", "Deep roots fear no wind."],
+            ["Every page turned is a life rediscovered.", "The ancients speak in whispers to those who listen.", "The golden path is under your feet."]
         ];
 
-        let index = 0;
+        let pageIdx = 0;
+        let sentIdx = 0;
         let isReading = false;
         let audioCtx;
         const synth = window.speechSynthesis;
 
-        function loadText() {
-            document.getElementById('active-content').innerHTML = `<span id="verse">${archive[index]}</span>`;
-            if (index + 1 < archive.length) {
-                document.getElementById('next-content').innerText = archive[index + 1];
-            }
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
 
-        function changePage(dir) {
-            if (dir === 1 && index < archive.length - 1) {
-                const page = document.getElementById('main-page');
-                page.classList.add('peel-off');
-                playPaper();
+        function renderPage(targetId, pIdx) {
+            const container = document.getElementById(targetId);
+            container.innerHTML = archive[pIdx].map((s, i) => 
+                `<span class="sentence" id="s-${pIdx}-${i}">${s} </span>`
+            ).join('');
+        }
+
+        function turnPage(dir) {
+            initAudio();
+            if (dir === 1 && pageIdx < archive.length - 1) {
+                const topPage = document.getElementById('page-top');
+                topPage.classList.add('peel-animation');
+                playPaperSFX();
 
                 setTimeout(() => {
-                    index++;
-                    loadText();
-                    page.style.transition = 'none';
-                    page.classList.remove('peel-off');
-                    page.style.opacity = '1';
-                    // The new page has appeared suddenly underneath, we just reset the top page to match it
+                    pageIdx++;
+                    sentIdx = 0;
+                    renderPage('front-content', pageIdx);
+                    if(pageIdx + 1 < archive.length) renderPage('back-content', pageIdx + 1);
+                    
+                    topPage.style.transition = 'none';
+                    topPage.classList.remove('peel-animation');
                     setTimeout(() => {
-                        page.style.transition = 'transform 0.9s cubic-bezier(0.645, 0.045, 0.355, 1), opacity 0.4s ease';
-                        if(isReading) startVoice();
+                        topPage.style.transition = 'transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1), opacity 0.6s ease';
+                        if(isReading) speakSentence();
                     }, 50);
-                }, 900);
-            } else if (dir === -1 && index > 0) {
-                index--;
-                loadText();
+                }, 1100);
+            } else if (dir === -1 && pageIdx > 0) {
+                pageIdx--;
+                sentIdx = 0;
+                renderPage('front-content', pageIdx);
             }
         }
 
-        function handlePlay() {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function toggleNarrator() {
+            initAudio();
             if (isReading) {
                 synth.cancel();
                 document.getElementById('play-btn').innerText = "▶";
+                document.querySelector('.reading-now')?.classList.remove('reading-now');
             } else {
                 document.getElementById('play-btn').innerText = "‖";
-                startVoice();
+                speakSentence();
             }
             isReading = !isReading;
         }
 
-        function startVoice() {
-            synth.cancel();
-            const verse = document.getElementById('verse');
-            verse.classList.add('gold-steady');
+        function speakSentence() {
+            if (!isReading) return;
+            
+            // Highlight current sentence
+            document.querySelectorAll('.reading-now').forEach(el => el.classList.remove('reading-now'));
+            const el = document.getElementById(`s-${pageIdx}-${sentIdx}`);
+            if (el) el.classList.add('reading-now');
 
-            const msg = new SpeechSynthesisUtterance(archive[index]);
+            const msg = new SpeechSynthesisUtterance(archive[pageIdx][sentIdx]);
             msg.pitch = 0.6; msg.rate = 0.8;
+            
             msg.onend = () => {
-                if (isReading && index < archive.length - 1) {
-                    setTimeout(() => changePage(1), 800);
+                if (!isReading) return;
+                if (sentIdx < archive[pageIdx].length - 1) {
+                    sentIdx++;
+                    setTimeout(speakSentence, 600);
+                } else {
+                    setTimeout(() => turnPage(1), 1000);
                 }
             };
             synth.speak(msg);
         }
 
-        function playPaper() {
+        function playPaperSFX() {
             if(!audioCtx) return;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = 'brown-noise';
-            gain.gain.setValueAtTime(0.02, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+            gain.gain.setValueAtTime(0.03, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
             osc.connect(gain); gain.connect(audioCtx.destination);
             osc.start();
         }
 
-        loadText();
+        // Setup Initial View
+        renderPage('front-content', 0);
+        renderPage('back-content', 1);
     </script>
 </body>
 </html>
